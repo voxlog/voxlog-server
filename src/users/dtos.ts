@@ -28,12 +28,30 @@ export const UserOutSchema = z.object({
   bio: z.string().optional(),
   realName: z.string().optional(),
   profilePictureUrl: z.string().optional(),
-  defaultTopArtistsRange: z.string(),
-  defaultTopAlbumsRange: z.string(),
-  defaultTopTracksRange: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  artistsRange: z.string(),
+  albumsRange: z.string(),
+  tracksRange: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
+
+export type RecentScrobble = {
+  scrobble: {
+    createdAt: string;
+  };
+  track: {
+    trackId: string;
+    title: string;
+  };
+  album: {
+    coverArtUrl: string | null;
+    albumId: string;
+  };
+  artist: {
+    artistId: string;
+    name: string;
+  };
+};
 
 export type UserCreateIn = z.infer<typeof UserCreateInSchema>;
 export type UserLoginIn = z.infer<typeof UserLoginInSchema>;

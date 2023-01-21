@@ -9,8 +9,7 @@ export async function login(req: Request, res: Response) {
     const userData = UserLoginInSchema.parse(req.body);
     const token = await userService.validateLogin(userData);
 
-    if(token)
-      return res.status(200).json({ token });
+    if (token) return res.status(200).json({ token });
 
     return res.status(401).json({ error: 'Credenciais inválidas' });
   } catch (error) {
@@ -19,11 +18,9 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-
-
 export async function create(req: Request, res: Response) {
   try {
-    console.log('cheguei aqui')
+    console.log('cheguei aqui');
     const userData: UserCreateIn = UserCreateInSchema.parse(req.body);
     const createdUser = await userService.create(userData);
 
@@ -122,7 +119,7 @@ export async function searchByName(req: Request, res: Response) {
 export async function getApiToken(req: Request, res: Response) {
   try {
     const username: string = z.string().parse(req.app.locals.username);
-
+    console.log(username);
     const token = await userService.getApiToken(username);
 
     if (token) {

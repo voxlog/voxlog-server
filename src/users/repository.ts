@@ -1,12 +1,21 @@
 import { DateTime } from 'luxon';
 import { db, sql } from '../lib/database/connector';
-import { UserCreateIn, UserOut } from './dtos';
-import cuid from 'cuid';''
+import { RecentScrobble, UserCreateIn, UserOut } from './dtos';
+import cuid from 'cuid';
+import { User } from '@prisma/client';
 
-export async function getPassword(username: string): Promise<string> {
+export async function getPassword(username: string): Promise<string | null> {
   try {
-    const password: any[] = await db.$queryRaw(sql`SELECT "getPassword"(${username})`);
-    return password[0].getPassword;
+    const password = await db.user.findUnique({
+      where: {
+        username: username,
+      },
+      select: {
+        password: true,
+      },
+    });
+
+    return password ? password.password : null;
   } catch (error) {
     throw error;
   }
@@ -16,76 +25,125 @@ export async function create(user: UserCreateIn): Promise<UserOut | null> {
   try {
     const birthDate = DateTime.fromFormat(user.birthDate, 'yyyy-MM-dd').toJSDate();
 
-    // const affectedRows: any = await db.$executeRaw(
-    //   sql`INSERT INTO "User" ("userId", "username", "email", "password", "birthDate", "bio", "realName") VALUES (${cuid()}, ${
-    //     user.username
-    //   }, ${user.email}, ${user.password}, ${birthDate}, ${user.bio}, ${user.realName});`,
-    // );
+    const newUser: User = await db.user.create({
+      data: {
+        ...user,
+        birthDate: birthDate,
+      },
+    });
 
-    const affectedRows: any = await db.$executeRaw(
-      sql`
-      Call "createUser"(${user.username}, ${user.email}, ${user.password}, ${birthDate}, ${user.bio}, ${user.realName});
-      `);
-
-    if (affectedRows < 1) return null;
-    return getByUsername(user.username);
+    return userOutFromUser(newUser);
   } catch (error) {
     throw error;
   }
+}
+
+function userOutFromUser(user: User): UserOut {
+  return {
+    ...user,
+    bio: user.bio || undefined,
+    realName: user.realName || undefined,
+    profilePictureUrl: user.profilePictureUrl || undefined,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
+  };
 }
 
 export async function getByUsername(username: string): Promise<UserOut | null> {
   try {
-    
-    const user: UserOut[] = await db.$queryRaw<UserOut[]>(
-      sql`SELECT "getByUsername"(${username});`,
-    );
+    const user = await db.user.findUnique({
+      where: {
+        username: username,
+      },
+    });
 
     if (!user) return null;
-    return user[0];
+    return userOutFromUser(user);
   } catch (error) {
     throw error;
   }
 }
+type UserListeningStats = {
+  totalHours: number;
+  totalArtists: number;
+  totalAlbums: number;
+  totalTracks: number;
+};
 
 export async function getListeningStats(username: string): Promise<any> {
-  return;
+  // const totalHours = await db.scrobble.groupBy({
+  //   by: ['userId'],
+  //   where: {
+  //     user: {
+  //       username: username,
+  //     },
+  //   },
+  //   include: {
+  //     track: {
+  //       select: {
+  //         duration: true,
+  //       },
+  //     },
+  //   },
+  // });
+  // return {
+  //   totalHours: totalHours.sum.track.duration,
+  //   totalArtists: totalArtists.count,
+  //   totalAlbums: totalAlbums.count,
+  //   totalTracks: totalTracks.count,
+  // };
 }
 
-export async function getRecentScrobbles(username: string, quantity: number): Promise<any> {
+export async function getRecentScrobbles(username: string, quantity: number): Promise<RecentScrobble[]> {
   try {
-  //   const tracksInMostRecentOrder: any[] = await db.$queryRaw(sql`
-  //   SELECT "Track"."trackId" as "trackId", "Track"."title" as "trackTitle",
-  //   "Album"."coverArtUrl" AS "albumCoverArtUrl", \
-  //   "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", \
-  //   "Scrobble"."createdAt" as "scrobbleCreatedAt" \
-  //   FROM "Scrobble" \
-  //   INNER JOIN "Track" ON "Scrobble"."trackId" = "Track"."trackId" \
-  //   INNER JOIN "Album" ON "Track"."albumId" = "Album"."albumId" \
-  //   INNER JOIN "Artist" ON "Album"."artistId" = "Artist"."artistId" \
-  //   WHERE "Scrobble"."userId" = (SELECT "userId" FROM "User" WHERE "username" = ${username} LIMIT 1) \
-  //   ORDER BY "Scrobble"."createdAt" DESC \
-  //   LIMIT ${quantity}
-  // `);
-
-    const tracksInMostRecentOrder: any[] = await db.$queryRaw(sql`
-      SELECT "getRecentScrobbles"(${username}, ${quantity});
-    `);
-
-    const tracks = tracksInMostRecentOrder.map((track) => {
-      return {
-        scrobbleCreatedAt: track.scrobbleCreatedAt,
+    const scrobblesInMostRecentOrder = await db.scrobble.findMany({
+      where: {
+        user: {
+          username: username,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: quantity,
+      include: {
         track: {
-          trackId: track.trackId,
-          trackTitle: track.trackTitle,
-          coverArtUrl: track.coverArtUrl,
+          select: {
+            trackId: true,
+            title: true,
+            fromAlbum: {
+              select: {
+                coverArtUrl: true,
+                albumId: true,
+                fromArtist: {
+                  select: {
+                    artistId: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const tracks: RecentScrobble[] = scrobblesInMostRecentOrder.map((scrobble) => {
+      return {
+        scrobble: {
+          createdAt: scrobble.createdAt.toISOString(),
+        },
+        track: {
+          trackId: scrobble.track.trackId,
+          title: scrobble.track.title,
         },
         album: {
-          coverArtUrl: track.albumCoverArtUrl,
+          coverArtUrl: scrobble.track.fromAlbum.coverArtUrl,
+          albumId: scrobble.track.fromAlbum.albumId,
         },
         artist: {
-          artistId: track.artistId,
-          name: track.artistName,
+          artistId: scrobble.track.fromAlbum.fromArtist.artistId,
+          name: scrobble.track.fromAlbum.fromArtist.name,
         },
       };
     });

@@ -75,26 +75,77 @@ async function main() {
     `,
   );
 
+  // await db.$queryRawUnsafe(
+  //   `CREATE OR REPLACE FUNCTION "getByUsername"(usernameIn VARCHAR(16)) RETURNS table ( \
+  //     "userId" text, \
+  //     "username" Varchar(16), \
+  //     "email" VARCHAR(100), \
+  //     "birthDate" Date, \
+  //     "bio" VarChar(140), \
+  //     "realName" VarChar(128), \
+  //     "profilePictureUrl" VarChar(2048), \
+  //     "artistsRange" "RangePreference", \
+  //     "albumsRange" "RangePreference", \
+  //     "tracksRange" "RangePreference", \
+  //     "createdAt" Timestamp(0), \
+  // 	  "updatedAt" Timestamp(0) \
+  //   ) AS $$ \
+  //   BEGIN \
+  //     RETURN Query SELECT \
+  //         "User"."userId", "User".username, "User".email, "User"."birthDate", "User".bio, "User"."realName", \
+  //         "User"."profilePictureUrl", "User"."artistsRange", "User"."albumsRange", "User"."tracksRange", \
+  //         "User"."createdAt", "User"."updatedAt" \
+  //         FROM "User" WHERE "User".username = usernameIn LIMIT 1; \
+  //   end; $$ LANGUAGE plpgsql;  
+  //   `,
+  // );
+  
   await db.$queryRawUnsafe(
     `CREATE OR REPLACE FUNCTION "getByUsername"(usernameIn VARCHAR(16)) RETURNS table ( \
-      username Varchar(16), \
-      email VARCHAR(100), \
+      "userId" text, \
+      "username" Varchar(16), \
+      "email" VARCHAR(100), \
       "birthDate" Date, \
-      bio VarChar(140), \
+      "bio" VarChar(140), \
       "realName" VarChar(128), \
       "profilePictureUrl" VarChar(2048), \
-      "artistsRange" "text", \
-      "albumsRange" "text", \
-      "tracksRange" "text", \
+      "artistsRange" "RangePreference", \
+      "albumsRange" "RangePreference", \
+      "tracksRange" "RangePreference", \
       "createdAt" Timestamp(0), \
   	  "updatedAt" Timestamp(0) \
     ) AS $$ \
     BEGIN \
       RETURN Query SELECT \
-          "User".username, "User".email, "User"."birthDate", "User".bio, "User"."realName", \
-          "User"."profilePictureUrl", "User"."artistsRange", "User"."tracksRange", \
+          "User"."userId", "User".username, "User".email, "User"."birthDate", "User".bio, "User"."realName", \
+          "User"."profilePictureUrl", "User"."artistsRange", "User"."albumsRange", "User"."tracksRange", \
           "User"."createdAt", "User"."updatedAt" \
           FROM "User" WHERE "User".username = usernameIn LIMIT 1; \
+    end; $$ LANGUAGE plpgsql;  
+    `,
+  );
+
+  await db.$queryRawUnsafe(
+    `CREATE OR REPLACE FUNCTION "searchUserByName"(usernameIn VARCHAR(16)) RETURNS table ( \
+      "userId" text, \
+      "username" Varchar(16), \
+      "email" VARCHAR(100), \
+      "birthDate" Date, \
+      "bio" VarChar(140), \
+      "realName" VarChar(128), \
+      "profilePictureUrl" VarChar(2048), \
+      "artistsRange" "RangePreference", \
+      "albumsRange" "RangePreference", \
+      "tracksRange" "RangePreference", \
+      "createdAt" Timestamp(0), \
+  	  "updatedAt" Timestamp(0) \
+    ) AS $$ \
+    BEGIN \
+      RETURN Query SELECT \
+          "User"."userId", "User".username, "User".email, "User"."birthDate", "User".bio, "User"."realName", \
+          "User"."profilePictureUrl", "User"."artistsRange", "User"."albumsRange", "User"."tracksRange", \
+          "User"."createdAt", "User"."updatedAt" \
+          FROM "User" WHERE "User".username = usernameIn; \
     end; $$ LANGUAGE plpgsql;  
     `,
   );
@@ -106,7 +157,7 @@ async function main() {
       "albumCoverArtUrl" VarChar(2048), \
       "artistId" uuid, \
       "artistName" VarChar(256), \
-      "scrobbleCreatedAt" Timestamp(0) \
+      "scrobbleCreatedAt" timestamp(0) \
     ) AS $$ \
     BEGIN \
       RETURN Query SELECT "Track"."trackId" as "trackId", "Track"."title" as "trackTitle", \
@@ -125,7 +176,7 @@ async function main() {
   );
 
   await db.$queryRawUnsafe(
-    `CREATE OR REPLACE FUNCTION getTrackById(trackIdIn uuid) RETURNS table ( \
+    `CREATE OR REPLACE FUNCTION "getTrackById"(trackIdIn uuid) RETURNS table ( \
       "trackId" uuid, \
       title VarChar(512), \
       "coverArtUrl" VarChar(2048), \
@@ -149,7 +200,33 @@ async function main() {
     END; $$ LANGUAGE plpgsql;
     `,
   );
-  
+
+  await db.$queryRawUnsafe(
+    `CREATE OR REPLACE FUNCTION "searchTrackByName"(trackTitle VarChar(512)) ) RETURNS table ( \
+      "trackId" uuid, \
+      title VarChar(512), \
+      "coverArtUrl" VarChar(2048), \
+      "duration" Int, \
+      "albumId" uuid, \
+      "albumTitle" VarChar(512), \
+      "albumCoverArtUrl" VarChar(2048), \
+      "artistId" uuid, \
+      "artistName" VarChar(256), \
+      "artistArtUrl" VarChar(2048), \
+      "scrobbleCreatedAt" Timestamp(0) \
+    ) AS $$ \
+    BEGIN \
+      RETURN Query SELECT "Track"."trackId", "Track"."title", "Track"."duration", "Track"."albumId", \
+    "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
+    "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."picUrl" AS "picUrl" \
+    FROM "Track" \
+    INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
+    INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
+    WHERE "title" = trackTitle; \
+    END; $$ LANGUAGE plpgsql;
+    `,
+  );
+
   // await db.$queryRawUnsafe(
   //   `CREATE OR REPLACE FUNCTION getTrackById(trackIdIn uuid) RETURNS table ( \
   //     "trackId" uuid, \

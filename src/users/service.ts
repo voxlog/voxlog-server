@@ -1,11 +1,12 @@
-import { DateTime } from 'luxon';;
+import { DateTime } from 'luxon';
 import * as userRepository from './repository';
 import { UserCreateIn, UserLoginIn, UserOut } from './dtos';
 import { compareHash, generateToken, generateApiKey, hashPassword } from './auth';
 
 export async function validateLogin(user: UserLoginIn): Promise<string | null> {
   try {
-    const password = await userRepository.getPassword(user.username);
+    const password: string | null = await userRepository.getPassword(user.username);
+    if (password === null) throw new Error('Invalid credentials');
     const isPasswordValid = await compareHash(user.password, password);
 
     if (isPasswordValid) {
@@ -77,7 +78,7 @@ export async function searchByName(username: string): Promise<UserOut[]> {
   }
 }
 
-export async function getApiToken(username: string): Promise<string> {  
+export async function getApiToken(username: string): Promise<string> {
   try {
     const apiToken = generateApiKey(username);
     return apiToken;
