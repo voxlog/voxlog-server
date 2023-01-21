@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  userId String @id @default(cuid())
+  userId String @id @default(uuid())
   username String @unique @db.VarChar(16)
   email String  @unique @db.VarChar(100)
   birthDate DateTime @db.Date
@@ -38,7 +38,7 @@ model User {
 }
 
 model Artist {
-  artistId String @id @default(cuid())
+  artistId String @id @default(uuid())
 
   // Save artist name for fast retrieval.
   name String @db.VarChar(256)
@@ -63,7 +63,7 @@ model Artist {
 }
 
 model Album {
-  albumId String @id @default(cuid())
+  albumId String @id @default(uuid())
 
   artistId String
 
@@ -84,7 +84,7 @@ model Album {
 }
 
 model Track {
-  trackId String @id @default(cuid())
+  trackId String @id @default(uuid())
 
   albumId String
 
@@ -107,7 +107,7 @@ model Track {
 }
 
 model Scrobble {
-  scrobbleId String @id @default(cuid())
+  scrobbleId String @id @default(uuid())
   // Who scrobbled.
   userId String
   user User @relation(fields: [userId], references: [userId])
@@ -121,7 +121,7 @@ model Scrobble {
 }
 
 model SimpleScrobble {
-  scrobbleId String @id @default(cuid())
+  scrobbleId String @id @default(uuid())
   // Who scrobbled.
   userId String
   user User @relation(fields: [userId], references: [userId])
@@ -136,7 +136,7 @@ model SimpleScrobble {
 }
 
 model Event {
-  eventId String @id @default(cuid())
+  eventId String @id @default(uuid())
 
   // Event name.
   name String @db.VarChar(128)
@@ -199,7 +199,7 @@ model EventArtist {
 
 // Photos taken at an event. Uploaded by users.
 model EventPicture {
-  pictureId String @id @default(cuid())
+  pictureId String @id @default(uuid())
   eventId String
   event Event @relation(fields: [eventId], references: [eventId])
 

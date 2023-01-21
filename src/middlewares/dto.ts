@@ -3,10 +3,11 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 export function validateBody(type: Zod.Schema): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      console.log(req.body);
       req.body = type.parse(req.body);
       next();
     } catch (error) {
-      console.log(error);
+      console.log("Erro validando body");
       res.status(400).json({ error });
     }
   };
