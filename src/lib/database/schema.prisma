@@ -97,6 +97,9 @@ model Track {
   // Needs to be coupled with a MusicBrainz Release ID for accuracy.
   // That's stored in the album though.
   mbId String? @unique @db.VarChar(36)
+
+  // Track duration in seconds.
+  duration Int @db.Integer
   
   scrobbles Scrobble[]
 
@@ -129,6 +132,7 @@ model SimpleScrobble {
   // What was scrobbled.
   trackTitle String @db.VarChar(512)
   artistName String @db.VarChar(256)
+  duration Int @db.Integer
 }
 
 model Event {
