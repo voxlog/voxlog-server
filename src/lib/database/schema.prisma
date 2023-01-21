@@ -15,94 +15,142 @@ model User {
   birthDate DateTime @db.Date
   password String @db.Char(60)
   
-  bio String? @db.VarChar(160)
-  realName String? @db.VarChar(64)
-  profilePictureUrl String? @db.VarChar(255)
-
-  defaultTopArtistsRange DaysRange @default(Week)
-  defaultTopAlbumsRange DaysRange @default(Week)
-  defaultTopTracksRange DaysRange @default(Week)
+  bio String? @db.VarChar(140)
+  realName String? @db.VarChar(128)
+  // The maximum length of an URL is 2048 characters.
+  profilePictureUrl String? @db.VarChar(2048)
 
   createdAt DateTime @default(now()) @db.Timestamp(0)
   updatedAt DateTime @updatedAt @default(now()) @db.Timestamp(0)
 
+  // User range preferences for displaying artists, albums and tracks on their profile.
+  artistsRange RangePreference @default(AllTime)
+  albumsRange RangePreference @default(AllTime)
+  tracksRange RangePreference @default(AllTime)
+
   scrobbles Scrobble[]
   eventsCreated Event[]
-  eventsAttending EventAttendee[] 
+  eventsAttending EventAttendee[]
+  pictures EventPicture[]
 }
 
-model Scrobble {
-  scrobbleId String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [userId])
-  
-  trackId String?
-  track Track? @relation(fields: [trackId], references: [trackId])
+model Artist {
+  artistId String @id @default(cuid())
+
+  // Save artist name for fast retrieval.
+  name String @db.VarChar(256)
+
+  // Artist picture
+  picUrl String? @db.VarChar(2048)
+
+  // About MusicBrainz and Spotify IDs: none of them are really optional,
+  // but only one of them is required (not both), so we can't make them
+  // required. Thus, we set them as optional.
+
+  // MusicBrainz Artist ID
+  mbId String? @unique @db.VarChar(36)
+
+  // Spotify Artist ID
+  spId String? @unique @db.VarChar(22)
 
   createdAt DateTime @default(now()) @db.Timestamp(0)
-}
-
-model Track {
-  trackId String @id @db.VarChar(16) // isrc
-
-  albumId String
-  trackTitle String @db.VarChar(100)
-  durationInSeconds Int @db.Integer
-
-  coverArtUrl String? @db.VarChar(256)  
-  lastSynced DateTime? @db.Timestamp(0)
   
-  scrobbles Scrobble[]
-  
-  inAlbum Album @relation(fields: [albumId], references: [albumId])
+  albums Album[]
+  events EventArtist[]
 }
-
 
 model Album {
   albumId String @id @default(cuid())
+
   artistId String
-  title String @db.VarChar(100)
+
+  // Save album title for fast retrieval.
+  title String @db.VarChar(512)
   
-  coverArtUrl String? @db.VarChar(256)
-  mbReleaseId String? @unique
+  coverArtUrl String? @db.VarChar(2048)
+
+  // MusicBrainz Release ID
+  mbId String? @unique @db.VarChar(36)
+
+  // Spotify Album ID
+  spId String? @unique @db.VarChar(22)
   
   tracks Track[]
   
   fromArtist Artist @relation(fields: [artistId], references: [artistId])
 }
 
-model Artist {
-  artistId String @id @default(cuid())
-  name String @db.VarChar(100)
+model Track {
+  trackId String @id @default(cuid())
 
-  artUrl String? @db.VarChar(256)
-  mbArtistId String? @unique
+  albumId String
+
+  // Save track title for fast retrieval.
+  title String @db.VarChar(512)
+
+  // Spotify Track ID.
+  spId String? @unique @db.VarChar(22)
+  // MusicBrainz Recording ID.
+  // Needs to be coupled with a MusicBrainz Release ID for accuracy.
+  // That's stored in the album though.
+  mbId String? @unique @db.VarChar(36)
   
-  albums Album[]
-  events EventArtist[]
+  scrobbles Scrobble[]
 
+  fromAlbum Album @relation(fields: [albumId], references: [albumId])
+}
+
+model Scrobble {
+  scrobbleId String @id @default(cuid())
+  // Who scrobbled.
+  userId String
+  user User @relation(fields: [userId], references: [userId])
+
+  // When was it scrobbled.
   createdAt DateTime @default(now()) @db.Timestamp(0)
+
+  // What was scrobbled.
+  trackId String?
+  track Track? @relation(fields: [trackId], references: [trackId])
 }
 
 model Event {
   eventId String @id @default(cuid())
-  name String @db.VarChar(100)
-  description String @db.VarChar(1000)
-  pluscode String @db.VarChar(20)
+
+  // Event name.
+  name String @db.VarChar(128)
+  // Event description.
+  description String @db.VarChar(2048)
+
+  // Event URL (tickets, information, etc.)
+  url String? @db.VarChar(2048)
+
+  // Event image.
+  imageUrl String? @db.VarChar(2048)
+  
+  // Event location.
+  // OpenStreetMap lat/lon.
+  lat Float @db.Real
+  lon Float @db.Real
+
+  // Event start and end date and time.
   startTime DateTime @db.Timestamp(0)
   endTime DateTime @db.Timestamp(0)
-  
 
+  // Event creator.
   creatorId String
   creator User @relation(fields: [creatorId], references: [userId])
   
   attendees EventAttendee[]
   artists EventArtist[]
+  pictures EventPicture[]
 
   createdAt DateTime @default(now()) @db.Timestamp(0)
   updatedAt DateTime @updatedAt @default(now()) @db.Timestamp(0)
 }
 
+// SQL Relation table for many-to-many relationship between events and users.
+// This is, a relation for who will attend an event.
 model EventAttendee {
   eventId String
   event Event @relation(fields: [eventId], references: [eventId])
@@ -115,6 +163,7 @@ model EventAttendee {
   @@id([eventId, userId])
 }
 
+// Relation for artists that will play at an event.
 model EventArtist {
   eventId String
   event Event @relation(fields: [eventId], references: [eventId])
@@ -127,7 +176,27 @@ model EventArtist {
   @@id([eventId, artistId])
 }
 
-enum DaysRange {
+// Photos taken at an event. Uploaded by users.
+model EventPicture {
+  pictureId String @id @default(cuid())
+  eventId String
+  event Event @relation(fields: [eventId], references: [eventId])
+
+  // Picture URL.
+  url String @db.VarChar(2048)
+
+  // Picture description.
+  description String? @db.VarChar(256)
+
+  // Uploader
+  uploaderId String
+  uploader User @relation(fields: [uploaderId], references: [userId])
+
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+}
+
+// User range preferences for displaying artists, albums and tracks on their profile.
+enum RangePreference {
   Week
   Month
   Quarter
