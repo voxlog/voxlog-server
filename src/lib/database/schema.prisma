@@ -29,6 +29,7 @@ model User {
   tracksRange RangePreference @default(AllTime)
 
   scrobbles Scrobble[]
+  simpleScrobbles SimpleScrobble[]
   eventsCreated Event[]
   eventsAttending EventAttendee[]
   pictures EventPicture[]
@@ -110,8 +111,22 @@ model Scrobble {
   createdAt DateTime @default(now()) @db.Timestamp(0)
 
   // What was scrobbled.
-  trackId String?
-  track Track? @relation(fields: [trackId], references: [trackId])
+  trackId String
+  track Track @relation(fields: [trackId], references: [trackId])
+}
+
+model SimpleScrobble {
+  scrobbleId String @id @default(cuid())
+  // Who scrobbled.
+  userId String
+  user User @relation(fields: [userId], references: [userId])
+
+  // When was it scrobbled.
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+
+  // What was scrobbled.
+  trackTitle String @db.VarChar(512)
+  artistName String @db.VarChar(256)
 }
 
 model Event {
@@ -204,4 +219,3 @@ enum RangePreference {
   Year
   AllTime
 }
-
