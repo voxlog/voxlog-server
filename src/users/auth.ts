@@ -6,16 +6,22 @@ const JWT_API_SECRET = process.env.JWT_API_SECRET || '';
 
 export function generateToken(username: string): string {
   return jwt.sign({ username }, JWT_SECRET, {
-    expiresIn: '7d',
+    expiresIn: '30d',
   });
 }
 
 export function generateApiKey(username: string): string {
-  return jwt.sign({ username }, JWT_API_SECRET);
+  return jwt.sign({ username }, JWT_API_SECRET, {
+    expiresIn: '365d',
+  });
 }
 
 export function verifyToken(token: string): string | JwtPayload {
   return jwt.verify(token, JWT_SECRET);
+}
+
+export function verifyApiKey(token: string): string | JwtPayload {
+  return jwt.verify(token, JWT_API_SECRET);
 }
 
 export async function hashPassword(password: string): Promise<string> {

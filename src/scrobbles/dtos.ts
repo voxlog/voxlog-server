@@ -1,20 +1,25 @@
-type SpotifyScrobble = {
-    // TODO: ver se isso tá certo com o Becelli, ou se é um token
-    user_id: string;
-    spid_track: string;
-    track_isrc: string;
-};
+import { z } from 'zod';
 
-type MusicBrainzScrobble = {
-    user_id: string;
-    mbid_recording: string;
-    mbid_release: string;
-};
+export const SpotifyScrobbleSchema = z.object({
+    userId: z.string(),
+    spIdTrack: z.string(),
+    trackISRC: z.string(),
+});
 
-type SimpleScrobble = {
-    user_id: string;
-    track_title: string;
-    artist_name: string;
-};
+export const MusicBrainzScrobbleSchema = z.object({
+    userId: z.string(),
+    mbIdRecording: z.string(),
+    mbIdRelease: z.string(),
+});
 
+export const SimpleScrobbleSchema = z.object({
+    userId: z.string(),
+    trackTitle: z.string(),
+    artistName: z.string(),
+    trackDuration: z.number(),
+});
+
+export type SpotifyScrobble = z.infer<typeof SpotifyScrobbleSchema>;
+export type MusicBrainzScrobble = z.infer<typeof MusicBrainzScrobbleSchema>;
+export type SimpleScrobble = z.infer<typeof SimpleScrobbleSchema>;
 export type Scrobble = SpotifyScrobble | MusicBrainzScrobble | SimpleScrobble;

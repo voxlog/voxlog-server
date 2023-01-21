@@ -7,7 +7,6 @@ import { z } from 'zod';
 export async function login(req: Request, res: Response) {
   try {
     const userData = UserLoginInSchema.parse(req.body);
-
     const token = await userService.validateLogin(userData);
 
     if(token)
@@ -19,6 +18,8 @@ export async function login(req: Request, res: Response) {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 }
+
+
 
 export async function create(req: Request, res: Response) {
   try {
@@ -111,6 +112,23 @@ export async function searchByName(req: Request, res: Response) {
       return res.status(200).json(users);
     } else {
       return res.status(404).json({ error: 'Nenhum usuário encontrado' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+}
+
+export async function getApiToken(req: Request, res: Response) {
+  try {
+    const username: string = z.string().parse(req.app.locals.username);
+
+    const token = await userService.getApiToken(username);
+
+    if (token) {
+      return res.status(200).json({ token });
+    } else {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
   } catch (error) {
     console.log(error);

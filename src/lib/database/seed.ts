@@ -6,6 +6,20 @@ const prisma = new PrismaClient();
 async function main() {
   
   await db.$queryRawUnsafe(
+    `CREATE OR REPLACE PROCEDURE "createArtist"( \
+      "nameIn" VarChar(256), \ 
+      "picUrlIn" VarChar(2048), \
+      "mbIdIn" VarChar(36) default null, \
+      "spIdIn" VarChar(22) default null, \
+    )	language plpgsql as $$ \
+    begin \
+      INSERT INTO "User" (name, "picUrl", "mbId", "spId") \
+      Values("nameIn", "picUrlIn", "mbIdIn", "spIdIn"); \
+    end; $$;
+    `,
+  );
+
+  await db.$queryRawUnsafe(
     `CREATE OR REPLACE PROCEDURE "createUser"( \
       "usernameIn" VarChar(16), \ 
       "emailIn" VarChar(100), \
@@ -13,7 +27,7 @@ async function main() {
       "birthDateIn" Date, \
       "bioIn" VarChar(140), \
       "realNameIn" VarChar(128) \ 
-    )	language plpgsql as $$\
+    )	language plpgsql as $$ \
     begin \
       INSERT INTO "User" (username, email, password, "birthDate", bio, "realName") \
       Values("usernameIn", "emailIn", "passwordIn", "birthDateIn", "bioIn", "realNameIn"); \
@@ -21,6 +35,20 @@ async function main() {
     `,
   );
 
+  await db.$queryRawUnsafe(
+    `CREATE OR REPLACE PROCEDURE "createAlbum"( \
+      "titleIn" VarChar(256), \ 
+      "artistId" uuid, \
+      "coverArtUrlIn" VarChar(2048), \
+      "mbIdIn" VarChar(36) default null, \
+      "spIdIn" VarChar(22) default null, \
+    )	language plpgsql as $$ \
+    begin \
+      INSERT INTO "User" (title, "coverArtUrl", "mbId", "spId") \
+      Values("titleIn", "coverArtUrlIn", "mbIdIn", "spIdIn"); \
+    end; $$;
+    `,
+  );
   
   await db.$queryRawUnsafe(
     `CREATE OR REPLACE FUNCTION "getPassword"(usernameIn varchar(16)) returns table( \
@@ -66,7 +94,7 @@ async function main() {
       "scrobbleCreatedAt" Timestamp(0) \
     ) AS $$ \
     BEGIN \
-      RETURN Query SELECT "Track"."trackId" as "trackId", "Track"."title" as "trackTitle",
+      RETURN Query SELECT "Track"."trackId" as "trackId", "Track"."title" as "trackTitle", \
     "Album"."coverArtUrl" AS "albumCoverArtUrl", \
     "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", \
     "Scrobble"."createdAt" as "scrobbleCreatedAt" \
@@ -81,31 +109,56 @@ async function main() {
     `,
   );
 
+  await db.$queryRawUnsafe(
+    `CREATE OR REPLACE FUNCTION getTrackById(trackIdIn uuid) RETURNS table ( \
+      "trackId" uuid, \
+      title VarChar(512), \
+      "coverArtUrl" VarChar(2048), \
+      "duration" Int, \
+      "albumId" uuid, \
+      "albumTitle" VarChar(512), \
+      "albumCoverArtUrl" VarChar(2048), \
+      "artistId" uuid, \
+      "artistName" VarChar(256), \
+      "artistArtUrl VarChar(2048)", \
+      "scrobbleCreatedAt" Timestamp(0), \
+    ) AS $$ \
+    BEGIN \
+      RETURN Query SELECT "Track"."trackId", "Track"."title", "Track"."duration", "Track"."albumId", \
+    "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
+    "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."picUrl" AS "picUrl" \
+    FROM "Track" \
+    INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
+    INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
+    WHERE "trackId" = trackIdIn LIMIT 1;
+    `,
+  );
+  
   // await db.$queryRawUnsafe(
-  //   `CREATE OR REPLACE FUNCTION getRecentScrobbles(usernameIn VARCHAR(16), quantity INT) RETURNS table ( \
+  //   `CREATE OR REPLACE FUNCTION getTrackById(trackIdIn uuid) RETURNS table ( \
   //     "trackId" uuid, \
   //     title VarChar(512), \
   //     "coverArtUrl" VarChar(2048), \
-  //     "durationInSeconds", \
-  //     "albumId" ,
-  //     "albumTitle" , 
-  //     "albumCoverArtUrl" , 
+  //     "duration" Int, \
+  //     "albumId" uuid,
+  //     "albumTitle" VarChar(512), 
+  //     "albumCoverArtUrl" VarChar(2048), 
   //     "artistId" uuid, \
   //     "artistName" VarChar(256), \
-  //     "artistArtUrl" , 
+  //     "artistArtUrl VarChar(2048)" , 
   //     "scrobbleCreatedAt" Timestamp(0), \
   //   ) AS $$ \
   //   BEGIN \
-  //     RETURN Query SELECT "Track"."trackId", "Track"."title", "Track"."coverArtUrl", "Track"."durationInSeconds", "Track"."albumId", \
-  //     "Album"."albumId" as "albumId", "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
-  //     "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."artUrl" AS "artistArtUrl" \
-  //     FROM "Track" \
-  //     INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
-  //     INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
-  //     WHERE "trackId" = ${trackId} LIMIT 1;
+  //     RETURN Query SELECT "Track"."trackId", "Track"."title", "Track"."duration", "Track"."albumId", \
+  //   "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
+  //   "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."picUrl" AS "picUrl" \
+  //   FROM "Track" \
+  //   INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
+  //   INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
+  //   WHERE "trackId" = trackIdIn LIMIT 1;
   //   `,
   // );
-  
+
 }
 
 main()

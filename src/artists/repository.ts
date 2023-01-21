@@ -5,6 +5,10 @@ export async function getById(artistId: string): Promise<ArtistOut | null> {
   return null;
 }
 
+export async function create(name: string, picUrl: string, mbIdIn: string, spIdIn: string): Promise<ArtistOut | null> {
+  return null;
+}
+
 export async function searchByName(artistName: string): Promise<ArtistOut[]> {
   return [];
 }

@@ -9,6 +9,7 @@ const userRoutes = Router({ mergeParams: true });
 
 // users/
 routes.post('/auth', validateBody(UserLoginInSchema), User.login);
+routes.get('/auth/token', auth, User.getApiToken);
 routes.post('/', validateBody(UserCreateInSchema), User.create);
 routes.get('/current', auth, User.getCurrent);
 routes.get('/search', auth, User.searchByName);

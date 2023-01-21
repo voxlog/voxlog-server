@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as scrobblesService from './service';
-import { CreateScrobbleIn } from '../../utils/dtos/Scrobble';
+import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 
 export async function create(req: Request, res: Response) {
   try {

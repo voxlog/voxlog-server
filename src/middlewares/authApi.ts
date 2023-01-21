@@ -14,7 +14,7 @@ export default async function (req: Request, res: Response, next: NextFunction) 
     const decoded = jwt.verify(token, JWT_API_SECRET);
 
     // @ts-ignore
-    req.app.locals.username = decoded.username;
+    req.body = { ...req.body, userId: decoded.userId };
     next();
   } catch (error) {
     res.status(401).json({ error: 'Unauthorized' });

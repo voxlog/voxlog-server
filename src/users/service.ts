@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';;
 import * as userRepository from './repository';
 import { UserCreateIn, UserLoginIn, UserOut } from './dtos';
-import { compareHash, generateToken, hashPassword } from './auth';
+import { compareHash, generateToken, generateApiKey, hashPassword } from './auth';
 
 export async function validateLogin(user: UserLoginIn): Promise<string | null> {
   try {
@@ -71,6 +71,16 @@ export async function searchByName(username: string): Promise<UserOut[]> {
   try {
     const tracks = await userRepository.searchByName(username);
     return tracks;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getApiToken(username: string): Promise<string> {  
+  try {
+    const apiToken = generateApiKey(username);
+    return apiToken;
   } catch (error) {
     console.log(error);
     throw error;
