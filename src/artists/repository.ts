@@ -5,7 +5,12 @@ export async function getById(artistId: string): Promise<ArtistOut | null> {
   return null;
 }
 
-export async function create(name: string, picUrl: string, mbIdIn: string, spIdIn: string): Promise<ArtistOut | null> {
+export async function create(name: string, picUrl: string, mbId: string, spId: string): Promise<ArtistOut | null> {
+  const affectedRows: any = await db.$executeRaw(
+    sql`
+      Call createArtist(${name}, ${picUrl}, ${mbId}, ${spId});
+    `,
+  );
   return null;
 }
 

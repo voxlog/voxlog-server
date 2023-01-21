@@ -24,7 +24,7 @@ export async function create(user: UserCreateIn): Promise<UserOut | null> {
 
     const affectedRows: any = await db.$executeRaw(
       sql`
-      Call createUser($${user.username}, ${user.email}, ${user.password}, ${birthDate}, ${user.bio}, ${user.realName});
+      Call createUser(${user.username}, ${user.email}, ${user.password}, ${birthDate}, ${user.bio}, ${user.realName});
       `);
 
     if (affectedRows < 1) return null;
