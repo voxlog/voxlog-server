@@ -1,8 +1,7 @@
-import { DateTime } from 'luxon';
-import { generateToken, invalidateToken } from '../../utils/auth';
-import { compareHash, hashPassword } from '../../utils/helpers';
+import { DateTime } from 'luxon';;
 import * as userRepository from './repository';
 import { UserCreateIn, UserLoginIn, UserOut } from './dtos';
+import { compareHash, generateToken, hashPassword } from './auth';
 
 export async function validateLogin(user: UserLoginIn): Promise<string | null> {
   try {
@@ -15,15 +14,6 @@ export async function validateLogin(user: UserLoginIn): Promise<string | null> {
     } else {
       throw new Error('Invalid credentials');
     }
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
-
-export async function logout(username: string): Promise<void> {
-  try {
-    invalidateToken(username);
   } catch (error) {
     console.log(error);
     throw error;

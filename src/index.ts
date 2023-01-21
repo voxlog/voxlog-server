@@ -9,6 +9,11 @@ import cors from 'cors';
 
 const app = express();
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log('Request: ', req.method, req.path, req.body);
+  
+  next();
+});
 app.use(cors());
 
 app.use('/scrobbles', scrobblesRoutes);

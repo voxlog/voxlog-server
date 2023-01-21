@@ -6,7 +6,6 @@ export const UserCreateInSchema = z.object({
     .string()
     .min(8)
     .regex(/^(?=.*[a-z])(?=.*[0-9])[a-zA-Z0-9]{8,}$/),
-
   email: z.string().email(),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   bio: z.string().optional(),

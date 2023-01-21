@@ -9,7 +9,6 @@ const userRoutes = Router({ mergeParams: true });
 
 // users/
 routes.post('/auth', validateBody(UserLoginInSchema), User.login);
-routes.delete('/auth', auth, User.logout);
 routes.post('/', validateBody(UserCreateInSchema), User.create);
 routes.get('/current', auth, User.getCurrent);
 routes.get('/search', auth, User.searchByName);
