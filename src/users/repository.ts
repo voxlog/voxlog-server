@@ -21,6 +21,41 @@ export async function getPassword(username: string): Promise<string | null> {
   }
 }
 
+export async function getUserIdByUsername(username: string): Promise<string | null> {
+  try {
+    const user = await db.user.findUnique({
+      where: {
+        username: username,
+      },
+      select: {
+        userId: true,
+      },
+    });
+    
+    return user ? user.userId : null;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getUsernameByUserId(userId: string): Promise<string | null> {
+  try {
+    const user = await db.user.findUnique({
+      where: {
+        userId: userId,
+      },
+      select: {
+        username: true,
+      },
+    });
+
+    return user ? user.username : null;
+  } catch (error) {
+    throw error;
+  }
+}
+
+
 export async function create(user: UserCreateIn): Promise<UserOut | null> {
   try {
     const birthDate = DateTime.fromFormat(user.birthDate, 'yyyy-MM-dd').toJSDate();

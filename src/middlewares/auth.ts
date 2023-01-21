@@ -14,7 +14,7 @@ export default async function (req: Request, res: Response, next: NextFunction) 
     const decoded = jwt.verify(token, JWT_SECRET);
 
     // @ts-ignore
-    req.app.locals.username = decoded.username;
+    req.app.locals.userId = decoded.userId;
 
     next();
   } catch (error) {

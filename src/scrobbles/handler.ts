@@ -4,15 +4,17 @@ import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 
 export async function create(req: Request, res: Response) {
   try {
-    const scrobble: CreateScrobbleIn = req.body;
+    const userId = req.app.locals.userId;
+    const scrobble = { ...req.body, userId };
+    console.log(scrobble);
 
-    const createdScrobble = await scrobblesService.create(scrobble);
+    // const createdScrobble = await scrobblesService.create(scrobble);
 
-    if (createdScrobble) {
-      return res.status(201).json(createdScrobble);
-    } else {
+    // if (createdScrobble) {
+    //   return res.status(201).json(createdScrobble);
+    // } else {
       return res.status(400).json({ error: 'Scrobble already exists' });
-    }
+    // }
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Internal server error' });

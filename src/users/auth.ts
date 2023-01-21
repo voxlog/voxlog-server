@@ -4,14 +4,14 @@ import * as crypt from 'bcrypt';
 const JWT_SECRET = process.env.JWT_SECRET || '';
 const JWT_API_SECRET = process.env.JWT_API_SECRET || '';
 
-export function generateToken(username: string): string {
-  return jwt.sign({ username }, JWT_SECRET, {
+export function generateToken(userId: string): string {
+  return jwt.sign({ userId }, JWT_SECRET, {
     expiresIn: '30d',
   });
 }
 
-export function generateApiKey(username: string): string {
-  return jwt.sign({ username }, JWT_API_SECRET, {
+export function generateApiKey(userId: string): string {
+  return jwt.sign({ userId }, JWT_API_SECRET, {
     expiresIn: '365d',
   });
 }

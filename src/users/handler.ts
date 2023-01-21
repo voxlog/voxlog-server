@@ -55,9 +55,8 @@ export async function get(req: Request, res: Response) {
 
 export async function getCurrent(req: Request, res: Response) {
   try {
-    const username: string = z.string().parse(req.app.locals.username);
-
-    const user = await userService.get(username);
+    const userId: string = z.string().parse(req.app.locals.userId);
+    const user = await userService.getByUserId(userId);
     if (user) {
       return res.status(200).json(user);
     } else {
@@ -118,9 +117,8 @@ export async function searchByName(req: Request, res: Response) {
 
 export async function getApiToken(req: Request, res: Response) {
   try {
-    const username: string = z.string().parse(req.app.locals.username);
-    console.log(username);
-    const token = await userService.getApiToken(username);
+    const userId: string = z.string().parse(req.app.locals.userId);
+    const token = await userService.getApiToken(userId);
 
     if (token) {
       return res.status(200).json({ token });

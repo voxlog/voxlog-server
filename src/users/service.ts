@@ -8,9 +8,11 @@ export async function validateLogin(user: UserLoginIn): Promise<string | null> {
     const password: string | null = await userRepository.getPassword(user.username);
     if (password === null) throw new Error('Invalid credentials');
     const isPasswordValid = await compareHash(user.password, password);
-
+    
     if (isPasswordValid) {
-      const token = generateToken(user.username);
+      const userId = await userRepository.getUserIdByUsername(user.username);
+      if (userId === null) throw new Error('Invalid credentials');
+      const token = generateToken(userId);
       return token;
     } else {
       throw new Error('Invalid credentials');
@@ -40,6 +42,17 @@ export async function create(user: UserCreateIn) {
 
 export async function get(username: string) {
   try {
+    const user = await userRepository.getByUsername(username);
+    return user;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+export async function getByUserId(userId: string) {
+  try {
+    const username = await userRepository.getUsernameByUserId(userId);
+    if (username === null) throw new Error('Invalid credentials');
     const user = await userRepository.getByUsername(username);
     return user;
   } catch (error) {
