@@ -9,6 +9,14 @@ export async function searchByName(albumName: string): Promise<AlbumOut[]> {
   return [];
 }
 
+export async function create(title: string, artistId: string, coverArtUrl: string, mbId: string, spId: string): Promise<AlbumOut | null> {
+  const affectedRows: any = await db.$executeRaw(
+    sql`
+      Call createAlbum(${title}, ${artistId}, ${coverArtUrl}, ${mbId}, ${spId});
+    `);
+  return null;
+}
+
 export async function getPopular(quantity: number): Promise<AlbumOut[]> {
   try {
     return [];

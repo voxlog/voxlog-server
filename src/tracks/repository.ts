@@ -23,16 +23,11 @@ export async function searchByName(trackName: string): Promise<TrackOut[]> {
   return tracks;
 }
 
-export async function create(trackId: string): Promise<TrackOut | null> {
-  // const trackData = await db.$queryRaw(sql`
-  //   SELECT "Track"."trackId", "Track"."title", "Track"."coverArtUrl", "Track"."durationInSeconds", "Track"."albumId", \
-  //   "Album"."albumId" as "albumId", "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
-  //   "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."artUrl" AS "artistArtUrl" \
-  //   FROM "Track" \
-  //   INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
-  //   INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
-  //   WHERE "trackId" = ${trackId} LIMIT 1;
-  //   `);
+export async function create(albumId: string, title: string, mbId: string, spId: string, duration: string): Promise<TrackOut | null> {
+  const affectedRows: any = await db.$executeRaw(
+    sql`
+      Call "createTrack"(${albumId}, ${title}, ${duration}, ${spId}, ${mbId});
+    `);
   return null;
 }
 

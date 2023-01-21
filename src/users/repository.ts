@@ -24,7 +24,7 @@ export async function create(user: UserCreateIn): Promise<UserOut | null> {
 
     const affectedRows: any = await db.$executeRaw(
       sql`
-      Call createUser(${user.username}, ${user.email}, ${user.password}, ${birthDate}, ${user.bio}, ${user.realName});
+      Call "createUser"(${user.username}, ${user.email}, ${user.password}, ${birthDate}, ${user.bio}, ${user.realName});
       `);
 
     if (affectedRows < 1) return null;
@@ -36,12 +36,9 @@ export async function create(user: UserCreateIn): Promise<UserOut | null> {
 
 export async function getByUsername(username: string): Promise<UserOut | null> {
   try {
-    // const user: UserOut[] = await db.$queryRaw<UserOut[]>(
-    //   sql`SELECT "username", "email", "birthDate", "bio", "realName", "profilePictureUrl", "artistsRange", "albumsRange", "tracksRange", "createdAt", "updatedAt" FROM "User" WHERE "username" = ${username} LIMIT 1`,
-    // );
     
     const user: UserOut[] = await db.$queryRaw<UserOut[]>(
-      sql`SELECT getByUsername(${username});`,
+      sql`SELECT "getByUsername"(${username});`,
     );
 
     if (!user) return null;
@@ -72,7 +69,7 @@ export async function getRecentScrobbles(username: string, quantity: number): Pr
   // `);
 
     const tracksInMostRecentOrder: any[] = await db.$queryRaw(sql`
-      SELECT getRecentScrobbles(${username}, ${quantity});
+      SELECT "getRecentScrobbles"(${username}, ${quantity});
     `);
 
     const tracks = tracksInMostRecentOrder.map((track) => {

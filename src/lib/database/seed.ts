@@ -10,10 +10,10 @@ async function main() {
       "nameIn" VarChar(256), \ 
       "picUrlIn" VarChar(2048), \
       "mbIdIn" VarChar(36) default null, \
-      "spIdIn" VarChar(22) default null, \
+      "spIdIn" VarChar(22) default null \
     )	language plpgsql as $$ \
     begin \
-      INSERT INTO "User" (name, "picUrl", "mbId", "spId") \
+      INSERT INTO "Artist" (name, "picUrl", "mbId", "spId") \
       Values("nameIn", "picUrlIn", "mbIdIn", "spIdIn"); \
     end; $$;
     `,
@@ -41,15 +41,30 @@ async function main() {
       "artistId" uuid, \
       "coverArtUrlIn" VarChar(2048), \
       "mbIdIn" VarChar(36) default null, \
-      "spIdIn" VarChar(22) default null, \
+      "spIdIn" VarChar(22) default null \
     )	language plpgsql as $$ \
     begin \
-      INSERT INTO "User" (title, "coverArtUrl", "mbId", "spId") \
+      INSERT INTO "Album" (title, "coverArtUrl", "mbId", "spId") \
       Values("titleIn", "coverArtUrlIn", "mbIdIn", "spIdIn"); \
     end; $$;
     `,
   );
-  
+
+  await db.$queryRawUnsafe(
+    `CREATE OR REPLACE PROCEDURE "createTrack"( \
+      "albumIdIn" uuid, \ 
+      "titleIn" VarChar(512), \
+      "durationIn" Int, \
+      "spIdIn" VarChar(22) default null, \
+      "mbIdIn" VarChar(36) default null \
+    )	language plpgsql as $$ \
+    begin \
+      INSERT INTO "Track" ("AlbumId", title, "spId", "mbId", duration) \
+      Values("AlbumIdIn", "titleIn", "spIdIn", "mbIdIn", "durationIn"); \
+    end; $$;
+    `,
+  );
+
   await db.$queryRawUnsafe(
     `CREATE OR REPLACE FUNCTION "getPassword"(usernameIn varchar(16)) returns table( \
       password char(60) \
@@ -120,8 +135,8 @@ async function main() {
       "albumCoverArtUrl" VarChar(2048), \
       "artistId" uuid, \
       "artistName" VarChar(256), \
-      "artistArtUrl VarChar(2048)", \
-      "scrobbleCreatedAt" Timestamp(0), \
+      "artistArtUrl" VarChar(2048), \
+      "scrobbleCreatedAt" Timestamp(0) \
     ) AS $$ \
     BEGIN \
       RETURN Query SELECT "Track"."trackId", "Track"."title", "Track"."duration", "Track"."albumId", \
@@ -130,7 +145,8 @@ async function main() {
     FROM "Track" \
     INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
     INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
-    WHERE "trackId" = trackIdIn LIMIT 1;
+    WHERE "trackId" = trackIdIn LIMIT 1; \
+    END; $$ LANGUAGE plpgsql;
     `,
   );
   
