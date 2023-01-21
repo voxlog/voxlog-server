@@ -33,6 +33,8 @@ model User {
   eventsCreated Event[]
   eventsAttending EventAttendee[]
   pictures EventPicture[]
+
+  isAdmin Boolean @default(false)
 }
 
 model Artist {
