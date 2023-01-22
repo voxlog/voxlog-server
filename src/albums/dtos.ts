@@ -1,1 +1,21 @@
-export type AlbumOut = {};
+import { z } from 'zod';
+
+export const AlbumCreateInSchema = z.object({
+    title: z.string(),
+    artistId: z.string(),
+    coverArtUrl: z.string().optional(),
+    mbId: z.string().optional(),
+    spId: z.string().optional(),
+});
+
+export const AlbumOutSchema = z.object({
+    albumId: z.string(),
+    title: z.string(),
+    artistId: z.string(),
+    coverArtUrl: z.string().optional(),
+    mbId: z.string().optional(),
+    spId: z.string().optional()
+});
+
+export type AlbumCreateIn = z.infer<typeof AlbumCreateInSchema>;
+export type AlbumOut = z.infer<typeof AlbumOutSchema>;

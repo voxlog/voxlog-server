@@ -1,5 +1,5 @@
 import { db } from '../lib/database/connector';
-import { ArtistOut, ArtistOutSchema, ArtistCreateIn } from './dtos';
+import { ArtistOut, ArtistOutSchema, ArtistCreateIn, ArtistCreateInSchema } from './dtos';
 
 export async function getById(artistId: string): Promise<ArtistOut | null> {
   return null;
@@ -62,7 +62,7 @@ export async function create(artist: ArtistCreateIn): Promise<ArtistOut| null> {
   try {
 
     const createdArtist = await db.artist.create({
-      data: artist,
+      data: ArtistCreateInSchema.parse(artist),
     });
 
     return ArtistOutSchema.parse({

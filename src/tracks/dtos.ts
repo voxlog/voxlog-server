@@ -1,16 +1,21 @@
-export type TrackOut = {
-  trackId: string;
-  title: string;
-  duration: number;
+import { z } from 'zod';
 
-  fromAlbum: {
-    albumId: string;
-    title: string;
-    coverArtUrl: string | null;
-  };
-  fromArtist: {
-    artistId: string;
-    name: string;
-    artUrl: string | null;
-  };
-};
+export const TrackCreateInSchema = z.object({
+  title: z.string(),
+  albumId: z.string(),
+  duration: z.number(),
+  mbId: z.string().optional(),
+  spId: z.string().optional(),
+});
+
+export const TrackOutSchema = z.object({
+  trackId: z.string(),
+  title: z.string(),
+  albumId: z.string(),
+  duration: z.number(),
+  mbId: z.string().optional(),
+  spId: z.string().optional(),
+});
+
+export type TrackCreateIn = z.infer<typeof TrackCreateInSchema>;
+export type TrackOut = z.infer<typeof TrackOutSchema>;

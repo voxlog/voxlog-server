@@ -4,6 +4,14 @@ import {
   getBySpotifyId as getArtistBySpId, 
   updateMbId as updateArtistMbId 
 } from '../artists/repository';
+import {
+  create as createAlbum,
+  getBySpotifyId as getAlbumBySpId
+} from '../albums/repository';
+import {
+  create as createTrack,
+  getBySpotifyId as getTrackBySpId
+} from '../tracks/repository';
 import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 import { getTrack, getArtist } from '../lib/wrapper/spotify/handler';
 import { getRecordingByIsrc } from '../lib/wrapper/musicbrainz/handler';
@@ -79,16 +87,39 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
       artist = await updateArtistMbId(artist.artistId, trackData.artistName, trackData.artistMbid);
     }
 
-    console.log(artist)
-
     // TODO: check if artist with mbId exists in the database
 
     // ALBUM
+    // Check if the album exists in the database
+    let album = await getAlbumBySpId(trackData.spIdAlbum);
+    // If it doesn't, create it
+    if (!album && artist) {
+      const albumData = {
+        title: trackData.albumName,
+        artistId: artist.artistId,
+        coverArtUrl: trackData.albumCoverUrl,
+        spId: trackData.spIdAlbum,
+      }
+      album = await createAlbum(albumData);
+    }
 
+    // TRACK
+    let track = await getTrackBySpId(trackDataRaw.id);
+    if (!track && album && artist) {
+      const trackData = {
+        title: trackDataRaw.name,
+        albumId: album.albumId,
+        spId: trackDataRaw.id,
+        duration: Math.round(trackDataRaw.duration_ms / 1000),
+      }
+      track = await createTrack(trackData);
+    }
     
     const scrobbleData = {
-      ...scrobble,
-      ...trackData,
+      userId: scrobble.userId,
+      album: album,
+      artist: artist,
+      track: track,
     }
 
     const createdScrobble = await scrobblesRepository.createSpotifyScrobble(scrobbleData);

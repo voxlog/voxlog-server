@@ -1,7 +1,48 @@
 import { Track as PTrack } from '@prisma/client';
 
 import { db, sql } from '../lib/database/connector';
-import { TrackOut } from './dtos';
+import { TrackOut, TrackCreateIn, TrackCreateInSchema, TrackOutSchema } from './dtos';
+
+export async function create(track: TrackCreateIn) : Promise<TrackOut| null> {
+  try {
+    const createdTrack = await db.track.create({
+      data: TrackCreateInSchema.parse(track),
+    });
+
+    const trackOut = {
+      ...createdTrack,
+      mbId: createdTrack.mbId ? createdTrack.mbId : undefined,
+    }
+
+    return TrackOutSchema.parse(trackOut);
+  } catch(error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getBySpotifyId(spId: string): Promise<TrackOut | null> {
+  try {
+    const createdTrack = await db.track.findUnique({
+      where: {
+        spId,
+      },
+    });
+
+    if (!createdTrack) {
+      return null;
+    }
+
+    const trackOut = {
+      ...createdTrack,
+      mbId: createdTrack.mbId ? createdTrack.mbId : undefined,
+    }
+
+    return TrackOutSchema.parse(trackOut);
+  } catch (error) {
+    throw error;
+  }
+}
 
 export async function searchByName(trackName: string): Promise<TrackOut[]> {
   const spacedTrackName = trackName.replace(' ', ' & ');
@@ -39,29 +80,6 @@ export async function searchByName(trackName: string): Promise<TrackOut[]> {
   });
 
   return tracksOut;
-}
-
-export async function create(
-  albumId: string,
-  title: string,
-  mbId: string,
-  spId: string,
-  duration: number,
-): Promise<TrackOut | null> {
-  // const affectedRows: any = await db.$executeRaw(
-  //   sql`
-  //     Call "createTrack"(${albumId}, ${title}, ${duration}, ${spId}, ${mbId});
-  //   `);
-  const track: TrackOut = await db.track.create({
-    data: {
-      albumId: albumId,
-      title: title,
-      mbId: mbId,
-      spId: spId,
-      duration: duration,
-    },
-  });
-  return null;
 }
 
 export async function getById(trackId: string): Promise<TrackOut | null> {
