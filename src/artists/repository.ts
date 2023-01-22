@@ -1,5 +1,6 @@
-import { db } from '../lib/database/connector';
-import { ArtistOut, ArtistOutSchema, ArtistCreateIn, ArtistCreateInSchema } from './dtos';
+import { db, sql } from '../lib/database/connector';
+import { ArtistOut, ArtistOutSchema, ArtistCreateIn, ArtistCreateInSchema, ArtistListeningStats } from './dtos';
+import { AlbumOut, AlbumOutSchema } from '../albums/dtos';
 
 export async function getById(artistId: string): Promise<ArtistOut | null> {
   try {
@@ -106,6 +107,81 @@ export async function searchByName(artistName: string): Promise<ArtistOut[]> {
 export async function getPopular(quantity: number): Promise<ArtistOut[]> {
   try {
     return [];
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getListeningStats(artistId: string): Promise<ArtistListeningStats| null> {
+  try {
+
+    let hoursListened: any = await db.$queryRawUnsafe(`
+      select coalesce(sum("duration"), 0)
+      from "Scrobble" s inner join "Track" t
+      on s."trackId" = t."trackId"
+      inner join "Album" a
+      on t."albumId" = a."albumId"
+      where a."artistId" = '${artistId}';
+    `);
+    
+    hoursListened = Number(hoursListened[0].coalesce.toString()) / 3600;
+
+    let uniqueListeners: any = await db.$queryRawUnsafe(`
+      select count(distinct "userId")
+      from "Scrobble" s inner join "Track" t 
+      on s."trackId" = t."trackId"
+      inner join "Album" a 
+      on a."albumId" = t."albumId"
+      where a."artistId" = '${artistId}';
+    `);
+
+    uniqueListeners = Number(uniqueListeners[0].count.toString());
+
+    let scrobbleCount: any = await db.$queryRawUnsafe(`
+      select count(distinct "scrobbleId")
+      from "Scrobble" s inner join "Track" t 
+      on s."trackId" = t."trackId"
+      inner join "Album" a 
+      on a."albumId" = t."albumId"
+      where a."artistId" = '${artistId}';
+    `);
+
+    scrobbleCount = Number(scrobbleCount[0].count.toString());
+
+    // Get an artists top tracks
+    // As in this SQL
+    /*
+      select t."trackId", count(t."trackId")
+      from "Scrobble" s inner join "Track" t
+      on s."trackId" = t."trackId"
+      inner join "Album" a 
+      on a."albumId" = t."albumId"
+      where a."artistId" = 'ec3030eb-1ad5-414b-9afa-788ddc9f57ce'
+      group by t."trackId";
+    */
+
+      const result = await db.artist.findUnique({
+        where: {
+          artistId,
+        },
+        include: {
+          albums: {
+            include: {
+              tracks: {
+                include: {
+                  scrobbles: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+    console.log(result?.albums[0].tracks[0].scrobbles)
+
+    console.log(hoursListened, uniqueListeners, scrobbleCount);
+
+    return null;
   } catch (error) {
     throw error;
   }

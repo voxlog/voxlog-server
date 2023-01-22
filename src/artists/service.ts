@@ -1,4 +1,4 @@
-import { ArtistOut } from './dtos';
+import { ArtistOut, ArtistListeningStats } from './dtos';
 import * as artistRepository from './repository';
 
 export async function getById(artistId: string): Promise<ArtistOut | null> {
@@ -24,6 +24,16 @@ export async function getPopular(quantity: number): Promise<ArtistOut[]> {
   try {
     const popularArtists = await artistRepository.getPopular(quantity);
     return popularArtists;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getListeningStats(artistId: string): Promise<ArtistListeningStats| null> {
+  try {
+    const listeningStats = await artistRepository.getListeningStats(artistId);
+    return listeningStats;
   } catch (error) {
     console.log(error);
     throw error;

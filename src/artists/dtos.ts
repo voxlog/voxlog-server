@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { TrackOut } from '../tracks/dtos';
+import { AlbumOut } from '../albums/dtos';
 
 export const ArtistCreateInSchema = z.object({
     name: z.string(),
@@ -18,3 +20,17 @@ export const ArtistOutSchema = z.object({
 
 export type ArtistCreateIn = z.infer<typeof ArtistCreateInSchema>;
 export type ArtistOut = z.infer<typeof ArtistOutSchema>;
+
+export type ArtistListeningStats = {
+    uniqueListeners: number;
+    totalHoursListened: number;
+    totalScrobbles: number;
+    topTracks: {
+        tracks: TrackOut[],
+        totalHoursListened: number,
+    };
+    topAlbums: {
+        albums: AlbumOut[],
+        totalHoursListened: number,
+    }
+}
