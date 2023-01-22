@@ -1,4 +1,9 @@
 import * as scrobblesRepository from './repository';
+import { 
+  create as createArtist, 
+  getBySpotifyId as getArtistBySpId, 
+  updateMbId as updateArtistMbId 
+} from '../artists/repository';
 import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 import { getTrack, getArtist } from '../lib/wrapper/spotify/handler';
 import { getRecordingByIsrc } from '../lib/wrapper/musicbrainz/handler';
@@ -49,8 +54,26 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
     // First image is the biggest
     trackData.albumCoverUrl = trackDataRaw.album.images[0].url;
 
-    // We won't look for the artist picture here, since it would take another API call
-    // and maybe it won't be necessary if the artist is already in the database.
+    // Check if the artist exists in the database
+    let artist = await getArtistBySpId(trackData.spIdArtist);
+    // If it doesn't, create it
+    if (!artist) {
+      // Get artist picture
+      const artistDataRaw = await getArtist(trackData.spIdArtist);
+      const artistPicUrl = artistDataRaw.images[0].url;
+      // Create artist
+      const artistData = {
+        name: trackData.artistName,
+        picUrl: artistPicUrl,
+        spId: trackData.spIdArtist,
+        mbId: trackData.artistMbid ? trackData.artistMbid : undefined,
+      }
+      artist = await createArtist(artistData);
+    }
+    // If it exists, but doesn't have a MusicBrainz ID, update it
+    else if (!artist.mbId && trackData.artistMbid) {
+      artist = await updateArtistMbId(artist.artistId, trackData.artistMbid);
+    }
     
     const scrobbleData = {
       ...scrobble,

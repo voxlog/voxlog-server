@@ -2,7 +2,7 @@ import { db, sql } from '../lib/database/connector';
 import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 
 export async function createSpotifyScrobble(scrobble: SpotifyScrobble): Promise<any> {
-  console.log('botando no banco spotify scrobble')
+  console.log(scrobble)
 
   return true;
 }

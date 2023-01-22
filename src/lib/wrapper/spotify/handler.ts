@@ -38,7 +38,7 @@ export async function getAlbum(trackId: string): Promise<unknown> {
   }
 }
 
-export async function getArtist(artistId: string): Promise<unknown> {
+export async function getArtist(artistId: string): Promise<SpotifyApi.ArtistObjectFull> {
   try {
     const data = await api.getArtist(artistId);
     return data.body;
