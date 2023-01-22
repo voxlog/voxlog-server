@@ -19,3 +19,14 @@ export const AlbumOutSchema = z.object({
 
 export type AlbumCreateIn = z.infer<typeof AlbumCreateInSchema>;
 export type AlbumOut = z.infer<typeof AlbumOutSchema>;
+
+export type AlbumListeningStats = {
+    uniqueListeners: number;
+    totalHoursListened: number;
+    totalScrobbles: number;
+    topTracks: {
+        trackId: string;
+        trackTitle: string;
+        totalHoursListened: number;
+    }[];
+}

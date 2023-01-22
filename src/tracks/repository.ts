@@ -1,7 +1,7 @@
 import { Track as PTrack } from '@prisma/client';
 
 import { db, sql } from '../lib/database/connector';
-import { TrackOut, TrackCreateIn, TrackCreateInSchema, TrackOutSchema } from './dtos';
+import { TrackOut, TrackCreateIn, TrackCreateInSchema, TrackOutSchema, TrackListeningStats } from './dtos';
 
 export async function create(track: TrackCreateIn) : Promise<TrackOut| null> {
   try {
@@ -121,6 +121,48 @@ export async function getById(trackId: string): Promise<TrackOut | null> {
 export async function getPopular(quantity: number): Promise<TrackOut[]> {
   try {
     return [];
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getListeningStats(trackId: string): Promise<TrackListeningStats | null> {
+  try {
+    const result = await db.track.findUnique({
+      where: {
+        trackId,
+      },
+      include: {
+        scrobbles: {
+          include: {
+            user: true,
+          }
+        }
+      },
+    });
+
+  if(!result) return null;
+
+  let foundListeners: string[] = [];
+  let uniqueListeners: number = 0;
+  let totalHoursListened: number = 0;
+  let totalScrobbles: number = 0;
+  
+  // From data, get unique listeners
+  result.scrobbles.forEach(scrobble => {
+    totalScrobbles++;
+    if(!foundListeners.includes(scrobble.user.userId)) {
+      foundListeners.push(scrobble.user.userId);
+      uniqueListeners++;
+    }
+    totalHoursListened += result.duration;
+  })
+  
+  return {
+    uniqueListeners: uniqueListeners,
+    totalHoursListened: totalHoursListened,
+    totalScrobbles: totalScrobbles,
+  };
   } catch (error) {
     throw error;
   }

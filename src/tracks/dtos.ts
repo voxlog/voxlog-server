@@ -19,3 +19,9 @@ export const TrackOutSchema = z.object({
 
 export type TrackCreateIn = z.infer<typeof TrackCreateInSchema>;
 export type TrackOut = z.infer<typeof TrackOutSchema>;
+
+export type TrackListeningStats = {
+  uniqueListeners: number;
+  totalHoursListened: number;
+  totalScrobbles: number;
+}
