@@ -1,5 +1,5 @@
 import * as trackRepository from './repository';
-import { TrackOut } from './dtos';
+import { TrackOut, TrackListeningStats } from './dtos';
 
 export async function getById(trackId: string): Promise<TrackOut | null> {
   try {
@@ -25,6 +25,16 @@ export async function getPopular(quantity: number): Promise<TrackOut[]> {
   try {
     const popularTracks = await trackRepository.getPopular(quantity);
     return popularTracks;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getListeningStats(trackId: string): Promise<TrackListeningStats | null> {
+  try {
+    const listeningStats = await trackRepository.getListeningStats(trackId);
+    return listeningStats;
   } catch (error) {
     console.log(error);
     throw error;

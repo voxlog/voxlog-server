@@ -120,10 +120,12 @@ export async function getListeningStats(albumId: string): Promise<AlbumListening
   topTracks.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
   // Limit to 10
   topTracks = topTracks.slice(0, 10);
+  // Convert to hours
+  topTracks.forEach(track => track.totalHoursListened /= 3600);
   
   return {
     uniqueListeners: uniqueListeners,
-    totalHoursListened: totalHoursListened,
+    totalHoursListened: totalHoursListened / 3600,
     totalScrobbles: totalScrobbles,
     topTracks: topTracks,
   };

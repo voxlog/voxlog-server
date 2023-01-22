@@ -145,7 +145,6 @@ export async function getListeningStats(trackId: string): Promise<TrackListening
 
   let foundListeners: string[] = [];
   let uniqueListeners: number = 0;
-  let totalHoursListened: number = 0;
   let totalScrobbles: number = 0;
   
   // From data, get unique listeners
@@ -155,12 +154,10 @@ export async function getListeningStats(trackId: string): Promise<TrackListening
       foundListeners.push(scrobble.user.userId);
       uniqueListeners++;
     }
-    totalHoursListened += result.duration;
   })
   
   return {
     uniqueListeners: uniqueListeners,
-    totalHoursListened: totalHoursListened,
     totalScrobbles: totalScrobbles,
   };
   } catch (error) {
