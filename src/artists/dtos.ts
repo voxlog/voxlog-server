@@ -28,6 +28,7 @@ export type ArtistListeningStats = {
     topTracks: {
         trackId: string;
         trackTitle: string;
+        albumCoverArtUrl: string | null;
         totalHoursListened: number;
     }[];
     topAlbums: {
