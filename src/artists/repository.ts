@@ -146,6 +146,7 @@ export async function getListeningStats(artistId: string): Promise<ArtistListeni
     trackId: string;
     trackTitle: string;
     totalHoursListened: number;
+    albumCoverArtUrl: string | null;
   }[] = [];
   let topAlbums: {
     albumId: string;
@@ -170,6 +171,7 @@ export async function getListeningStats(artistId: string): Promise<ArtistListeni
           trackId: track.trackId,
           trackTitle: track.title,
           totalHoursListened: 0,
+          albumCoverArtUrl: album.coverArtUrl,
         });
       }
 
