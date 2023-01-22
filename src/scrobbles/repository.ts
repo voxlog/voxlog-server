@@ -1,10 +1,17 @@
 import { db, sql } from '../lib/database/connector';
-import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
+import { MusicBrainzScrobble, SimpleScrobble, ScrobbleCreateSchema, ScrobbleCreate, ScrobbleCreateOut, ScrobbleCreateOutSchema } from './dtos';
 
-export async function createSpotifyScrobble(scrobble: SpotifyScrobble): Promise<any> {
-  console.log(scrobble)
+export async function createSpotifyScrobble(scrobble: ScrobbleCreate): Promise<any> {
+  const createdScrobble = await db.scrobble.create({
+    data: ScrobbleCreateSchema.parse(scrobble),
+  });
 
-  return true;
+  const scrobbleOut = {
+    ...createdScrobble,
+    createdAt: createdScrobble.createdAt.toISOString(),
+  };
+
+  return ScrobbleCreateOutSchema.parse(scrobbleOut);
 }
 
 export async function createMusicBrainzScrobble(scrobble: MusicBrainzScrobble): Promise<any> {
