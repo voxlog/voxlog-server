@@ -1,8 +1,40 @@
 import { db } from '../lib/database/connector';
-import { AlbumOut, AlbumCreateIn, AlbumCreateInSchema, AlbumOutSchema, AlbumListeningStats } from './dtos';
+import { AlbumOut, AlbumCreateIn, AlbumCreateInSchema, AlbumOutSchema, AlbumListeningStats, AlbumPageOutSchema } from './dtos';
 
 export async function getById(albumId: string): Promise<AlbumOut | null> {
-  return null;
+  try {
+    const album = await db.album.findUnique({
+      where: {
+        albumId,
+      },
+    });
+
+    if (!album) {
+      return null;
+    }
+
+    let artistName: any = await db.artist.findUnique({
+      where: {
+        artistId: album.artistId,
+      },
+    });
+
+    if (!artistName) {
+      return null;
+    }
+
+    artistName = artistName.name;
+
+    const outAlbum = {
+      ...album,
+      mbId: album.mbId ? album.mbId : undefined,
+      artistName,
+    }
+
+    return AlbumPageOutSchema.parse(outAlbum);
+  } catch (error) {
+    throw error;
+  }
 }
 
 export async function searchByName(albumName: string): Promise<AlbumOut[]> {
