@@ -1,21 +1,38 @@
 import { Request, Response } from 'express';
 import * as scrobblesService from './service';
-import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
+import { 
+  SpotifyScrobble, SpotifyScrobbleSchema, 
+  MusicBrainzScrobble, MusicBrainzScrobbleSchema,
+  SimpleScrobble, SimpleScrobbleSchema
+} from './dtos';
 
 export async function create(req: Request, res: Response) {
   try {
     const userId = req.app.locals.userId;
-    const scrobble = { ...req.body, userId };
-    // console.log(scrobble);
+    const scrobbleReq = { ...req.body, userId };
+    //console.log(scrobble);
 
-    // const createdScrobble = await scrobblesService.create(scrobble);
+    let createdScrobble: any;
+    let scrobbleData: SpotifyScrobble | MusicBrainzScrobble | SimpleScrobble;
+    if(scrobbleReq.spIdTrack) {
+      scrobbleData = SpotifyScrobbleSchema.parse(scrobbleReq);
+      createdScrobble = await scrobblesService.createSpotifyScrobble(scrobbleData);
+    }
+    else if(scrobbleReq.mbIdRecording) {
+      scrobbleData = MusicBrainzScrobbleSchema.parse(scrobbleReq);
+      createdScrobble = await scrobblesService.createMusicBrainzScrobble(scrobbleData);
+    }
+    else {
+      scrobbleData = SimpleScrobbleSchema.parse(scrobbleReq);
+      createdScrobble = await scrobblesService.createSimpleScrobble(scrobbleData);
+    }
 
-    // if (createdScrobble) {
-    //   return res.status(201).json(createdScrobble);
-    // } else {
+  if (createdScrobble)
+    return res.status(201).json(createdScrobble);
+  else
       return res.status(400).json({ error: 'Scrobble already exists' });
-    // }
-  } catch (error) {
+  }
+  catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Internal server error' });
   }
