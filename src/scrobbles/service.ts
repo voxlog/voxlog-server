@@ -26,7 +26,10 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
       const recordingDataRaw: any = await getRecordingByIsrc(trackDataRaw.external_ids.isrc);
       // If it's not on MusicBrainz, bail out
       if(recordingDataRaw.error === undefined) {
-        const recordingList = recordingDataRaw.metadata.isrc['recording-list'];
+        let recordingList = recordingDataRaw.metadata.isrc['recording-list'];
+        if(Number(recordingList._attributes.count ) > 1) {
+          recordingList.recording= recordingList.recording[0];
+        }
         // ISRCs are precise -- it's safe to assume it's only one track
         trackData.trackName = recordingList.recording.title._text;
         // If it's only one artist, it's safe to assume it's the correct one
@@ -54,6 +57,7 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
     // First image is the biggest
     trackData.albumCoverUrl = trackDataRaw.album.images[0].url;
 
+    // ARTIST
     // Check if the artist exists in the database
     let artist = await getArtistBySpId(trackData.spIdArtist);
     // If it doesn't, create it
@@ -72,8 +76,15 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
     }
     // If it exists, but doesn't have a MusicBrainz ID, update it
     else if (!artist.mbId && trackData.artistMbid) {
-      artist = await updateArtistMbId(artist.artistId, trackData.artistMbid);
+      artist = await updateArtistMbId(artist.artistId, trackData.artistName, trackData.artistMbid);
     }
+
+    console.log(artist)
+
+    // TODO: check if artist with mbId exists in the database
+
+    // ALBUM
+
     
     const scrobbleData = {
       ...scrobble,

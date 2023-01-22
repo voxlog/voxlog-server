@@ -13,8 +13,7 @@ export const ArtistOutSchema = z.object({
     picUrl: z.string().optional(),
     mbId: z.string().optional(),
     spId: z.string().optional(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: z.string()
 });
 
 export type ArtistCreateIn = z.infer<typeof ArtistCreateInSchema>;

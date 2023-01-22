@@ -17,13 +17,20 @@ export async function getBySpotifyId(spId: string): Promise<ArtistOut | null> {
       return null;
     }
 
-    return ArtistOutSchema.parse(artist);
+    return ArtistOutSchema.parse({
+      artistId: artist.artistId,
+      name: artist.name,
+      picUrl: artist.picUrl,
+      mbId: artist.mbId ? artist.mbId : undefined,
+      spId: artist.spId,
+      createdAt: artist.createdAt.toISOString(),
+    });
   } catch (error) {
     throw error;
   }
 }
 
-export async function updateMbId(artistId: string, mbId: string): Promise<ArtistOut | null> {
+export async function updateMbId(artistId: string, newArtistName: string, mbId: string): Promise<ArtistOut | null> {
   try {
     const updatedArtist = await db.artist.update({
       where: {
@@ -31,10 +38,19 @@ export async function updateMbId(artistId: string, mbId: string): Promise<Artist
       },
       data: {
         mbId,
+        name: newArtistName,
       },
     });
-    
-    return ArtistOutSchema.parse(updatedArtist);
+
+    // Parse createtAt to ISO string
+    return ArtistOutSchema.parse({
+      artistId: updatedArtist.artistId,
+      name: updatedArtist.name,
+      picUrl: updatedArtist.picUrl,
+      mbId: updatedArtist.mbId,
+      spId: updatedArtist.spId,
+      createdAt: updatedArtist.createdAt.toISOString(),
+    });
   } catch (error) {
     throw error;
   }
@@ -44,11 +60,19 @@ export async function updateMbId(artistId: string, mbId: string): Promise<Artist
 // a MusicBrainz ID but no Spotify ID.
 export async function create(artist: ArtistCreateIn): Promise<ArtistOut| null> {
   try {
+
     const createdArtist = await db.artist.create({
       data: artist,
     });
 
-    return ArtistOutSchema.parse(createdArtist);
+    return ArtistOutSchema.parse({
+      artistId: createdArtist.artistId,
+      name: createdArtist.name,
+      picUrl: createdArtist.picUrl,
+      mbId: createdArtist.mbId ? createdArtist.mbId : undefined,
+      spId: createdArtist.spId,
+      createdAt: createdArtist.createdAt.toISOString(),
+    });
   } catch (error) {
     throw error;
   }
