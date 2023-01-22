@@ -1,5 +1,5 @@
 import { db, sql } from '../lib/database/connector';
-import { Scrobble, SpotifyScrobble } from './dtos';
+import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 
 export async function createSpootifyScrobble(scrobble: SpotifyScrobble): Promise<any> {
   // const user: User = await db.user.findUnique({

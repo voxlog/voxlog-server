@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 export const SpotifyScrobbleSchema = z.object({
     userId: z.string(),
-    spIdTrack: z.string(),
-    trackISRC: z.string(),
+    spIdTrack: z.string()
 });
 
 export const MusicBrainzScrobbleSchema = z.object({
