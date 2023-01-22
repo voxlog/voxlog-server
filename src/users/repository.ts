@@ -31,7 +31,7 @@ export async function getUserIdByUsername(username: string): Promise<string | nu
         userId: true,
       },
     });
-    
+
     return user ? user.userId : null;
   } catch (error) {
     throw error;
@@ -54,7 +54,6 @@ export async function getUsernameByUserId(userId: string): Promise<string | null
     throw error;
   }
 }
-
 
 export async function create(user: UserCreateIn): Promise<UserOut | null> {
   try {
@@ -182,6 +181,30 @@ export async function getRecentScrobbles(username: string, quantity: number): Pr
         },
       };
     });
+
+    // mock data
+    if (tracks.length === 0) {
+      const mockTrack = (num: number) => {
+        return {
+          scrobble: {
+            createdAt: DateTime.now().minus({ days: num }).toISO(),
+          },
+          track: {
+            trackId: cuid(),
+            title: `Mock Track ${num}`,
+          },
+          album: {
+            coverArtUrl: 'https://images.dog.ceo/breeds/saluki/n02091831_7977.jpg',
+            albumId: cuid(),
+          },
+          artist: {
+            artistId: cuid(),
+            name: `Mock Artist ${num}`,
+          },
+        };
+      };
+      return [mockTrack(1), mockTrack(2), mockTrack(3)];
+    }
 
     return tracks;
   } catch (error) {

@@ -10,7 +10,7 @@ import cors from 'cors';
 const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
-  console.log('Request: ', req.method, req.path, req.body);
+  console.log('Request: ', req.method, req.path, '\nbody:', req.body);
   next();
 });
 app.use(cors());

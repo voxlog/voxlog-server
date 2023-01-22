@@ -20,7 +20,7 @@ export async function getById(req: Request, res: Response) {
 }
 
 export async function searchByName(req: Request, res: Response) {
-  const trackName = z.string().parse(req.query.trackName);
+  const trackName = z.string().parse(req.query.name);
 
   try {
     const tracks = await trackService.searchByName(trackName as string);

@@ -7,12 +7,6 @@ import auth from '../middlewares/auth';
 const routes = Router();
 const userRoutes = Router({ mergeParams: true });
 
-routes.use((req, res, next) => {
-  // authentication header
-  console.log(req.headers.authorization);
-  next();
-});
-
 // users/
 routes.post('/auth', validateBody(UserLoginInSchema), User.login);
 routes.get('/auth/token', auth, User.getApiToken);
@@ -25,5 +19,7 @@ routes.use('/:username', userRoutes);
 userRoutes.get('/', User.get);
 userRoutes.get('/stats', User.getStats);
 userRoutes.get('/recent-scrobbles', User.getRecentScrobbles);
+userRoutes.get('/top-artists', User.getTopArtists);
+// userRoutes.get('/top-albums', User.getTopAlbums);
 
 export default routes;

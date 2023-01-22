@@ -5,7 +5,7 @@ import { TrackOut } from './dtos';
 
 export async function searchByName(trackName: string): Promise<TrackOut[]> {
   const spacedTrackName = trackName.replace(' ', ' & ');
-  const tracks: PTrack[] = await db.track.findMany({
+  const tracks = await db.track.findMany({
     where: {
       title: {
         search: spacedTrackName,
@@ -20,10 +20,34 @@ export async function searchByName(trackName: string): Promise<TrackOut[]> {
     },
   });
 
-  return tracks;
+  const tracksOut: TrackOut[] = tracks.map((track) => {
+    return {
+      trackId: track.trackId,
+      title: track.title,
+      duration: track.duration,
+      fromAlbum: {
+        albumId: track.fromAlbum.albumId,
+        title: track.fromAlbum.title,
+        coverArtUrl: track.fromAlbum.coverArtUrl,
+      },
+      fromArtist: {
+        artistId: track.fromAlbum.fromArtist.artistId,
+        name: track.fromAlbum.fromArtist.name,
+        artUrl: track.fromAlbum.fromArtist.picUrl,
+      },
+    };
+  });
+
+  return tracksOut;
 }
 
-export async function create(albumId: string, title: string, mbId: string, spId: string, duration: number): Promise<TrackOut | null> {
+export async function create(
+  albumId: string,
+  title: string,
+  mbId: string,
+  spId: string,
+  duration: number,
+): Promise<TrackOut | null> {
   // const affectedRows: any = await db.$executeRaw(
   //   sql`
   //     Call "createTrack"(${albumId}, ${title}, ${duration}, ${spId}, ${mbId});

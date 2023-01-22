@@ -11,28 +11,25 @@ export async function login(req: Request, res: Response) {
 
     if (token) return res.status(200).json({ token });
 
-    return res.status(401).json({ error: 'Credenciais inválidas' });
+    return res.status(401).json({ error: 'Invalid Credentials' });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
 export async function create(req: Request, res: Response) {
   try {
-    console.log('cheguei aqui');
     const userData: UserCreateIn = UserCreateInSchema.parse(req.body);
     const createdUser = await userService.create(userData);
 
     if (createdUser) {
       return res.status(201).json(createdUser);
     } else {
-      return res.status(400).json({ error: 'Usuário já existe' });
+      return res.status(400).json({ error: 'User already exists' });
     }
   } catch (error) {
-    // @ts-ignore
-    console.log(error.issues);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -45,11 +42,11 @@ export async function get(req: Request, res: Response) {
     if (user) {
       return res.status(200).json(user);
     } else {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(404).json({ error: 'User already exists' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -60,11 +57,11 @@ export async function getCurrent(req: Request, res: Response) {
     if (user) {
       return res.status(200).json(user);
     } else {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(404).json({ error: 'User already exists' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -77,7 +74,7 @@ export async function getStats(req: Request, res: Response) {
     return res.status(200).json({ stats });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -91,11 +88,11 @@ export async function getRecentScrobbles(req: Request, res: Response) {
     if (recentScrobbles) {
       return res.status(200).json(recentScrobbles);
     } else {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(404).json({ error: 'User already exists' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -107,11 +104,11 @@ export async function searchByName(req: Request, res: Response) {
     if (users.length > 0) {
       return res.status(200).json(users);
     } else {
-      return res.status(404).json({ error: 'Nenhum usuário encontrado' });
+      return res.status(404).json({ error: 'No user found' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -123,10 +120,28 @@ export async function getApiToken(req: Request, res: Response) {
     if (token) {
       return res.status(200).json({ token });
     } else {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(404).json({ error: 'User already exists' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function getTopArtists(req: Request, res: Response) {
+  try {
+    // const username = z.string().parse(req.params.username);
+    // const quantity = z.number().optional().parse(req.query.range) || 10;
+
+    // const topArtists = await userService.getTopArtists(username, quantity);
+
+    // if (topArtists) {
+    //   return res.status(200).json(topArtists);
+    // } else {
+    return res.status(404).json({ error: 'User already exists' });
+    // }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

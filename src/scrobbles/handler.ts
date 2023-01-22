@@ -6,7 +6,7 @@ export async function create(req: Request, res: Response) {
   try {
     const userId = req.app.locals.userId;
     const scrobble = { ...req.body, userId };
-    console.log(scrobble);
+    // console.log(scrobble);
 
     // const createdScrobble = await scrobblesService.create(scrobble);
 
