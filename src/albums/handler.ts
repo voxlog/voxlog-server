@@ -52,3 +52,20 @@ export async function getPopular(req: Request, res: Response) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+export async function getListeningStats(req: Request, res: Response) {
+  try {
+    const albumId = z.string().parse(req.params.albumId);
+
+    const listeningStats = await albumService.getListeningStats(albumId);
+
+    if (listeningStats) {
+      return res.status(200).json(listeningStats);
+    } else {
+      return res.status(404).json({ error: 'Album not found' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

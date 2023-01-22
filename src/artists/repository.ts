@@ -205,10 +205,13 @@ export async function getListeningStats(artistId: string): Promise<ArtistListeni
   topTracks = topTracks.slice(0, 10);
   // Limit to 5
   topAlbums = topAlbums.slice(0, 5);
+  // Divide by 3600 to get hours
+  topTracks.forEach(track => track.totalHoursListened /= 3600);
+  topAlbums.forEach(album => album.totalHoursListened /= 3600);
 
   return {
     uniqueListeners: uniqueListeners,
-    totalHoursListened: totalHoursListened,
+    totalHoursListened: totalHoursListened / 3600,
     totalScrobbles: totalScrobbles,
     topTracks: topTracks,
     topAlbums: topAlbums,
