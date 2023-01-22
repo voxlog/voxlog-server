@@ -2,7 +2,28 @@ import { db } from '../lib/database/connector';
 import { ArtistOut, ArtistOutSchema, ArtistCreateIn, ArtistCreateInSchema } from './dtos';
 
 export async function getById(artistId: string): Promise<ArtistOut | null> {
-  return null;
+  try {
+    const artist = await db.artist.findUnique({
+      where: {
+        artistId,
+      },
+    });
+
+    if (!artist) {
+      return null;
+    }
+
+    return ArtistOutSchema.parse({
+      artistId: artist.artistId,
+      name: artist.name,
+      picUrl: artist.picUrl,
+      mbId: artist.mbId ? artist.mbId : undefined,
+      spId: artist.spId,
+      createdAt: artist.createdAt.toISOString(),
+    });
+  } catch (error) {
+    throw error;
+  }
 }
 
 export async function getBySpotifyId(spId: string): Promise<ArtistOut | null> {
