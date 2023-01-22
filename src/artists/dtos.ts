@@ -26,11 +26,14 @@ export type ArtistListeningStats = {
     totalHoursListened: number;
     totalScrobbles: number;
     topTracks: {
-        tracks: TrackOut[],
-        totalHoursListened: number,
-    };
+        trackId: string;
+        trackTitle: string;
+        totalHoursListened: number;
+    }[];
     topAlbums: {
-        albums: AlbumOut[],
-        totalHoursListened: number,
-    }
+        albumId: string;
+        albumTitle: string;
+        albumCoverArtUrl: string | null;
+        totalHoursListened: number;
+    }[];
 }

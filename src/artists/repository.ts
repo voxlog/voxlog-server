@@ -1,6 +1,7 @@
 import { db, sql } from '../lib/database/connector';
 import { ArtistOut, ArtistOutSchema, ArtistCreateIn, ArtistCreateInSchema, ArtistListeningStats } from './dtos';
 import { AlbumOut, AlbumOutSchema } from '../albums/dtos';
+import { TrackOut, TrackOutSchema } from '../tracks/dtos';
 
 export async function getById(artistId: string): Promise<ArtistOut | null> {
   try {
@@ -114,74 +115,104 @@ export async function getPopular(quantity: number): Promise<ArtistOut[]> {
 
 export async function getListeningStats(artistId: string): Promise<ArtistListeningStats| null> {
   try {
-
-    let hoursListened: any = await db.$queryRawUnsafe(`
-      select coalesce(sum("duration"), 0)
-      from "Scrobble" s inner join "Track" t
-      on s."trackId" = t."trackId"
-      inner join "Album" a
-      on t."albumId" = a."albumId"
-      where a."artistId" = '${artistId}';
-    `);
-    
-    hoursListened = Number(hoursListened[0].coalesce.toString()) / 3600;
-
-    let uniqueListeners: any = await db.$queryRawUnsafe(`
-      select count(distinct "userId")
-      from "Scrobble" s inner join "Track" t 
-      on s."trackId" = t."trackId"
-      inner join "Album" a 
-      on a."albumId" = t."albumId"
-      where a."artistId" = '${artistId}';
-    `);
-
-    uniqueListeners = Number(uniqueListeners[0].count.toString());
-
-    let scrobbleCount: any = await db.$queryRawUnsafe(`
-      select count(distinct "scrobbleId")
-      from "Scrobble" s inner join "Track" t 
-      on s."trackId" = t."trackId"
-      inner join "Album" a 
-      on a."albumId" = t."albumId"
-      where a."artistId" = '${artistId}';
-    `);
-
-    scrobbleCount = Number(scrobbleCount[0].count.toString());
-
-    // Get an artists top tracks
-    // As in this SQL
-    /*
-      select t."trackId", count(t."trackId")
-      from "Scrobble" s inner join "Track" t
-      on s."trackId" = t."trackId"
-      inner join "Album" a 
-      on a."albumId" = t."albumId"
-      where a."artistId" = 'ec3030eb-1ad5-414b-9afa-788ddc9f57ce'
-      group by t."trackId";
-    */
-
-      const result = await db.artist.findUnique({
-        where: {
-          artistId,
-        },
-        include: {
-          albums: {
-            include: {
-              tracks: {
-                include: {
-                  scrobbles: true,
-                },
+    const result = await db.artist.findUnique({
+      where: {
+        artistId,
+      },
+      include: {
+        albums: {
+          include: {
+            tracks: {
+              include: {
+                scrobbles: {
+                  include: {
+                    user: true,
+                  }
+                }
               },
             },
           },
         },
+      },
+    });
+
+  if(!result) return null;
+
+  let foundListeners: string[] = [];
+  let uniqueListeners: number = 0;
+  let totalHoursListened: number = 0;
+  let totalScrobbles: number = 0;
+  let topTracks: {
+    trackId: string;
+    trackTitle: string;
+    totalHoursListened: number;
+  }[] = [];
+  let topAlbums: {
+    albumId: string;
+    albumTitle: string;
+    totalHoursListened: number;
+    albumCoverArtUrl: string | null;
+  }[] = [];
+  
+  // From data, get unique listeners
+  result.albums.forEach(album => {
+    if(!topAlbums.some(a => a.albumId === album.albumId)) {
+      topAlbums.push({
+        albumId: album.albumId,
+        albumTitle: album.title,
+        totalHoursListened: 0,
+        albumCoverArtUrl: album.coverArtUrl,
       });
+    }
+    album.tracks.forEach(track => {
+      if(!topTracks.some(t => t.trackId === track.trackId)) {
+        topTracks.push({
+          trackId: track.trackId,
+          trackTitle: track.title,
+          totalHoursListened: 0,
+        });
+      }
 
-    console.log(result?.albums[0].tracks[0].scrobbles)
+      track.scrobbles.forEach(scrobble => {
+        totalScrobbles++;
+        if(!foundListeners.includes(scrobble.user.userId)) {
+          foundListeners.push(scrobble.user.userId);
+          uniqueListeners++;
+        }
+        totalHoursListened += track.duration;
+        
+        // Update top tracks
+        topTracks.forEach(topTrack => {
+          if(topTrack.trackId === track.trackId) {
+            topTrack.totalHoursListened += track.duration;
+          }
+        })
 
-    console.log(hoursListened, uniqueListeners, scrobbleCount);
+        // Update top albums
+        topAlbums.forEach(topAlbum => {
+          if(topAlbum.albumId === album.albumId) {
+            topAlbum.totalHoursListened += track.duration;
+          }
+        })
+      })
+    })
+  })
 
-    return null;
+  // Sort top tracks and albums
+  topTracks.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
+  topAlbums.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
+  // Limit to 10
+  topTracks = topTracks.slice(0, 10);
+  // Limit to 5
+  topAlbums = topAlbums.slice(0, 5);
+
+  return {
+    uniqueListeners: uniqueListeners,
+    totalHoursListened: totalHoursListened,
+    totalScrobbles: totalScrobbles,
+    topTracks: topTracks,
+    topAlbums: topAlbums,
+  };
   } catch (error) {
     throw error;
   }
