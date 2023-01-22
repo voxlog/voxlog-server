@@ -1,7 +1,7 @@
 import * as trackRepository from './repository';
-import { TrackOut, TrackListeningStats } from './dtos';
+import { TrackOut, TrackPageOut, TrackListeningStats } from './dtos';
 
-export async function getById(trackId: string): Promise<TrackOut | null> {
+export async function getById(trackId: string): Promise<TrackPageOut | null> {
   try {
     const track = await trackRepository.getById(trackId);
     return track;

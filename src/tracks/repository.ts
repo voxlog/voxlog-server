@@ -1,7 +1,7 @@
 import { Track as PTrack } from '@prisma/client';
 
 import { db, sql } from '../lib/database/connector';
-import { TrackOut, TrackCreateIn, TrackCreateInSchema, TrackOutSchema, TrackListeningStats } from './dtos';
+import { TrackOut, TrackCreateIn, TrackCreateInSchema, TrackOutSchema, TrackListeningStats, TrackPageOut } from './dtos';
 
 export async function create(track: TrackCreateIn) : Promise<TrackOut| null> {
   try {
@@ -82,40 +82,29 @@ export async function searchByName(trackName: string): Promise<TrackOut[]> {
   return tracksOut;
 }
 
-export async function getById(trackId: string): Promise<TrackOut | null> {
-  // const trackData = await db.$queryRaw(sql`
-  //   SELECT "Track"."trackId", "Track"."title", "Track"."coverArtUrl", "Track"."durationInSeconds", "Track"."albumId", \
-  //   "Album"."albumId" as "albumId", "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
-  //   "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."artUrl" AS "artistArtUrl" \
-  //   FROM "Track" \
-  //   INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
-  //   INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
-  //   WHERE "trackId" = ${trackId} LIMIT 1;
-  //   `);
+export async function getById(trackId: string): Promise<TrackPageOut | null> {
+  try {
+    const track = await db.track.findUnique({
+      where: {
+        trackId,
+      },
+      include: {
+        fromAlbum: {
+          include: {
+            fromArtist: true,
+          },
+        },
+      },
+    });
 
-  const track = await db.track.findUnique({
-    where: {
-      trackId: trackId,
-    },
-  });
+    if (!track) {
+      return null;
+    }
 
-  // const track: Track = {
-  //   trackId: trackData[0].trackId,
-  //   title: trackData[0].title,
-  //   coverArtUrl: trackData[0].coverArtUrl,
-  //   durationInSeconds: trackData[0].durationInSeconds,
-  //   album: {
-  //     albumId: trackData[0].albumId,
-  //     title: trackData[0].albumTitle,
-  //     coverArtUrl: trackData[0].albumCoverArtUrl,
-  //   },
-  //   artist: {
-  //     artistId: trackData[0].artistId,
-  //     name: trackData[0].artistName,
-  //     artUrl: trackData[0].artistArtUrl,
-  //   },
-  // };
-  return track;
+    return track;
+  } catch(error) {
+    throw error;
+  } 
 }
 
 export async function getPopular(quantity: number): Promise<TrackOut[]> {
