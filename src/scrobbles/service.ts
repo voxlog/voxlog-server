@@ -15,6 +15,7 @@ import {
 import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 import { getTrack, getArtist } from '../lib/wrapper/spotify/handler';
 import { getRecordingByIsrc } from '../lib/wrapper/musicbrainz/handler';
+import { compareTwoStrings } from 'string-similarity';
 
 export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
   try {
@@ -26,12 +27,46 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
       spIdAlbum: string,
       albumName: string,
       albumCoverUrl: string,
-    } = {trackName: '', spIdArtist: '', artistName: '', spIdAlbum: '', albumName: '', albumCoverUrl: ''};
+      artistMbid: string | null,
+    } = {trackName: '', spIdArtist: '', artistName: '', spIdAlbum: '', albumName: '', albumCoverUrl: '', artistMbid: null};
 
-    // Always use album artist
-    const albumArtist = trackDataRaw.album.artists[0];
-    trackData.artistName = albumArtist.name;
-    trackData.trackName = trackDataRaw.name;
+    // Do a MusicBrainz lookup to try and find the artist name/mbid and track name
+    if (trackDataRaw.external_ids.isrc) {
+      const recordingDataRaw: any = await getRecordingByIsrc(trackDataRaw.external_ids.isrc);
+      // If it's not on MusicBrainz, bail out
+      if(recordingDataRaw.error === undefined) {
+        let recordingList = recordingDataRaw.metadata.isrc['recording-list'];
+        if(Number(recordingList._attributes.count ) > 1) {
+          recordingList.recording= recordingList.recording[0];
+        }
+        // ISRCs are precise -- it's safe to assume it's only one track
+        trackData.trackName = recordingList.recording.title._text;
+        // Even if it's one artist, it's NOT safe to assume it's the album artist
+        // So we check for name similarity
+        let artist: any = recordingList.recording['artist-credit']['name-credit']['artist'];
+        if (recordingList._attributes.count > 1)
+          artist = recordingList.recording['artist-credit']['name-credit']['artist'][0];
+
+        const artistMbId = recordingList.recording['artist-credit']['name-credit']['artist']._attributes.id;
+        const artistMbName = recordingList.recording['artist-credit']['name-credit']['artist'].name._text;
+
+        // Check if the artist name is similar to the album artist name
+        const artistSpName = trackDataRaw.album.artists[0].name;
+        const similarity = compareTwoStrings(artistSpName, artistMbName);
+        if (similarity > 0.8) {
+          trackData.artistName = artistMbName;
+          trackData.artistMbid = artistMbId;
+        }
+      }
+    }
+
+    // If we couldn't find the artist name/mbid and track name, use the Spotify data
+    if (!trackData.artistMbid) {
+      // Always use album artist
+      const albumArtist = trackDataRaw.album.artists[0];
+      trackData.artistName = albumArtist.name;
+      trackData.trackName = trackDataRaw.name;
+    }
 
     // Fill the rest with Spotify data
     trackData.spIdArtist = trackDataRaw.album.artists[0].id;
@@ -53,8 +88,13 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
         name: trackData.artistName,
         picUrl: artistPicUrl,
         spId: trackData.spIdArtist,
+        mbId: trackData.artistMbid ? trackData.artistMbid : undefined,
       }
       artist = await createArtist(artistData);
+    }
+    // If it exists, but doesn't have a MusicBrainz ID, update it
+    else if (!artist.mbId && trackData.artistMbid) {
+      artist = await updateArtistMbId(artist.artistId, trackData.artistName, trackData.artistMbid);
     }
 
     // TODO: check if artist with mbId exists in the database
