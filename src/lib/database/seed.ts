@@ -288,31 +288,89 @@ async function main() {
     END; $$ LANGUAGE plpgsql;
     `,
   );
+  
+  // triggers
+  await db.$queryRawUnsafe(
+    `
+    CREATE OR REPLACE FUNCTION "logUser"() RETURNS TRIGGER AS $$ \
+    BEGIN \
+      IF NEW <> OLD THEN \
+        new."updatedAt" = current_timestamp; \
+      END IF; \
+      RETURN NEW; \
+    END; $$ LANGUAGE PLPGSQL;
+  `,
+  );
 
-  // await db.$queryRawUnsafe(
-  //   `CREATE OR REPLACE FUNCTION getTrackById(trackIdIn uuid) RETURNS table ( \
-  //     "trackId" uuid, \
-  //     title VarChar(512), \
-  //     "coverArtUrl" VarChar(2048), \
-  //     "duration" Int, \
-  //     "albumId" uuid,
-  //     "albumTitle" VarChar(512),
-  //     "albumCoverArtUrl" VarChar(2048),
-  //     "artistId" uuid, \
-  //     "artistName" VarChar(256), \
-  //     "artistArtUrl VarChar(2048)" ,
-  //     "scrobbleCreatedAt" Timestamp(0), \
-  //   ) AS $$ \
-  //   BEGIN \
-  //     RETURN Query SELECT "Track"."trackId", "Track"."title", "Track"."duration", "Track"."albumId", \
-  //   "Album"."title" AS "albumTitle", "Album"."coverArtUrl" AS "albumCoverArtUrl", \
-  //   "Artist"."artistId" as "artistId", "Artist"."name" AS "artistName", "Artist"."picUrl" AS "picUrl" \
-  //   FROM "Track" \
-  //   INNER JOIN "Album" ON "Album"."albumId" = "Track"."albumId" \
-  //   INNER JOIN "Artist" ON "Artist"."artistId" = "Album"."artistId" \
-  //   WHERE "trackId" = trackIdIn LIMIT 1;
-  //   `,
-  // );
+  await db.$queryRawUnsafe(`
+      CREATE or replace TRIGGER "logUserChanges" \
+      before UPDATE \
+      ON "User" \
+      FOR EACH ROW \
+      EXECUTE PROCEDURE "logUser"();   
+    `,
+  );
+  
+  await db.$queryRawUnsafe(
+    `
+    CREATE OR REPLACE FUNCTION "logEvent"() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$ \
+    BEGIN \
+      IF NEW <> OLD THEN \
+        new."updatedAt" = current_timestamp; \
+      END IF; \
+      RETURN NEW; \
+    END; $$ 
+    `,
+  );
+    
+  await db.$queryRawUnsafe(`
+    CREATE or replace TRIGGER "logEventChanges" \
+    before UPDATE \
+    ON "Event" \
+    FOR EACH ROW \
+    EXECUTE PROCEDURE "logEvent"();
+    `,
+  );
+
+  await db.$queryRawUnsafe(`
+      CREATE OR REPLACE FUNCTION "logEventAttendee"() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$ \
+      BEGIN \
+        IF NEW <> OLD THEN \
+          new."updatedAt" = current_timestamp; \
+        END IF; \
+        RETURN NEW; \
+      END; $$ 
+    `,
+  );
+
+  await db.$queryRawUnsafe(`
+      CREATE or replace TRIGGER "logEventAttendeeChanges" \
+      before UPDATE \
+      ON "EventAttendee" \
+      FOR EACH ROW \
+      EXECUTE PROCEDURE "logEventAttendee"();
+    `,
+  );
+
+  await db.$queryRawUnsafe(`
+    CREATE OR REPLACE FUNCTION "logEventArtist"() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$ \
+    BEGIN \
+      IF NEW <> OLD THEN \
+        new."updatedAt" = current_timestamp; \
+      END IF; \
+      RETURN NEW; \
+    END; $$
+    `,
+  );
+
+  await db.$queryRawUnsafe(`
+    CREATE or replace TRIGGER "logEventArtistChanges" \
+      before UPDATE \
+      ON "EventArtist" \
+      FOR EACH ROW \
+      EXECUTE PROCEDURE "logEventArtist"(); \
+    `,
+  );
 }
 
 main()
