@@ -8,7 +8,7 @@ export async function validateLogin(user: UserLoginIn): Promise<string | null> {
     const password: string | null = await userRepository.getPassword(user.username);
     if (password === null) throw new Error('Invalid credentials');
     const isPasswordValid = await compareHash(user.password, password);
-    
+
     if (isPasswordValid) {
       const userId = await userRepository.getUserIdByUsername(user.username);
       if (userId === null) throw new Error('Invalid credentials');
@@ -64,6 +64,7 @@ export async function getByUserId(userId: string) {
 export async function getListeningStats(username: string) {
   try {
     const timeSpentListening = await userRepository.getListeningStats(username);
+
     return timeSpentListening;
   } catch (error) {
     console.log(error);

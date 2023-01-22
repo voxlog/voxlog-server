@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { db, sql } from '../lib/database/connector';
-import { RecentScrobble, UserCreateIn, UserOut } from './dtos';
+import { RecentScrobble, UserCreateIn, UserListeningStatsOut, UserOut } from './dtos';
 import cuid from 'cuid';
 import { User } from '@prisma/client';
 
@@ -97,35 +97,60 @@ export async function getByUsername(username: string): Promise<UserOut | null> {
     throw error;
   }
 }
-type UserListeningStats = {
-  totalHours: number;
-  totalArtists: number;
-  totalAlbums: number;
-  totalTracks: number;
-};
 
-export async function getListeningStats(username: string): Promise<any> {
-  // const totalHours = await db.scrobble.groupBy({
-  //   by: ['userId'],
-  //   where: {
-  //     user: {
-  //       username: username,
-  //     },
-  //   },
-  //   include: {
-  //     track: {
-  //       select: {
-  //         duration: true,
-  //       },
-  //     },
-  //   },
-  // });
-  // return {
-  //   totalHours: totalHours.sum.track.duration,
-  //   totalArtists: totalArtists.count,
-  //   totalAlbums: totalAlbums.count,
-  //   totalTracks: totalTracks.count,
-  // };
+export async function getListeningStats(username: string): Promise<UserListeningStatsOut> {
+  const userIdQuerry: any = await db.$queryRaw(sql`
+  Select "userId" from "User" where "User".username = ${username};
+  `);
+
+  const userId = userIdQuerry[0].userId;
+
+  function bigIntToNumber(bigInt: any) {
+    if (bigInt === null) return 0;
+    if (typeof bigInt === 'number') return bigInt;
+    return Number(bigInt.toString());
+  }
+
+  const totalHoursQuery: any = await db.$queryRaw(sql`
+  Select "getTotalHours"(${userId});
+  `);
+
+  let totalHours = bigIntToNumber(totalHoursQuery[0].getTotalHours);
+  totalHours = totalHours / 3600;
+
+  const totalHoursSimpleScrobbleQuery: any = await db.$queryRaw(sql`
+    Select "getTotalHoursSimpleScrobble"(${userId});
+  `);
+
+  let totalHoursSimpleScrobble = bigIntToNumber(totalHoursSimpleScrobbleQuery[0].getTotalHoursSimpleScrobble);
+  totalHoursSimpleScrobble = totalHoursSimpleScrobble / 3600;
+
+  const totalHoursScrobbles = totalHours + totalHoursSimpleScrobble;
+
+  const totalArtistQuery: any = await db.$queryRaw(sql`
+    Select "getTotalArtist"(${userId});
+  `);
+
+  const totalArtists = bigIntToNumber(totalArtistQuery[0].getTotalArtist);
+
+  const totalAlbumsQuery: any = await db.$queryRaw(sql`
+    Select "getTotalAlbums"(${userId});
+  `);
+
+  const totalAlbums = bigIntToNumber(totalAlbumsQuery[0].getTotalAlbums);
+
+  const totalTracksQuery: any = await db.$queryRaw(sql`
+    Select "getTotalTracks"(${userId});
+  `);
+
+  const totalTracks = bigIntToNumber(totalTracksQuery[0].getTotalTracks);
+
+  return {
+    totalHours: totalHoursScrobbles,
+    totalArtists: totalArtists,
+    totalAlbums: totalAlbums,
+    totalTracks: totalTracks,
+  };
 }
 
 export async function getRecentScrobbles(username: string, quantity: number): Promise<RecentScrobble[]> {
@@ -181,31 +206,6 @@ export async function getRecentScrobbles(username: string, quantity: number): Pr
         },
       };
     });
-
-    // mock data
-    if (tracks.length === 0) {
-      const mockTrack = (num: number) => {
-        return {
-          scrobble: {
-            createdAt: DateTime.now().minus({ days: num }).toISO(),
-          },
-          track: {
-            trackId: cuid(),
-            title: `Mock Track ${num}`,
-          },
-          album: {
-            coverArtUrl: 'https://images.dog.ceo/breeds/saluki/n02091831_7977.jpg',
-            albumId: cuid(),
-          },
-          artist: {
-            artistId: cuid(),
-            name: `Mock Artist ${num}`,
-          },
-        };
-      };
-      return [mockTrack(1), mockTrack(2), mockTrack(3)];
-    }
-
     return tracks;
   } catch (error) {
     throw error;

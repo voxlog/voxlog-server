@@ -53,6 +53,13 @@ export type RecentScrobble = {
   };
 };
 
+export type UserListeningStatsOut = {
+  totalHours: number;
+  totalArtists: number;
+  totalAlbums: number;
+  totalTracks: number;
+};
+
 export type UserCreateIn = z.infer<typeof UserCreateInSchema>;
 export type UserLoginIn = z.infer<typeof UserLoginInSchema>;
 export type UserOut = z.infer<typeof UserOutSchema>;
