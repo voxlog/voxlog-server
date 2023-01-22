@@ -1,6 +1,7 @@
 import * as scrobblesRepository from './repository';
 import { SpotifyScrobble, MusicBrainzScrobble, SimpleScrobble } from './dtos';
 import { getTrack } from '../lib/wrapper/spotify/handler';
+import { getRecordingByIsrc } from '../lib/wrapper/musicbrainz/handler';
 
 export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
   try {
@@ -8,7 +9,9 @@ export async function createSpotifyScrobble(scrobble: SpotifyScrobble) {
     let artistName: string;
 
     // Do a MusicBrainz lookup to try and find the artist
-    
+    if (trackDataRaw.external_ids.isrc) {
+      const recordingDataRaw: any = await getRecordingByIsrc(trackDataRaw.external_ids.isrc);
+    }
 
     const createdScrobble = await scrobblesRepository.createSpotifyScrobble(scrobble);
     return createdScrobble;

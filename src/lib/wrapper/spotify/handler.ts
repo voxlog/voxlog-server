@@ -10,7 +10,7 @@ async function getAccessToken() {
   api.setAccessToken(data.body["access_token"]);
 };
 
-export async function getTrack(trackId: string): Promise<unknown> {
+export async function getTrack(trackId: string): Promise<SpotifyApi.TrackObjectFull> {
   try {
     const data = await api.getTrack(trackId);
     return data.body;
