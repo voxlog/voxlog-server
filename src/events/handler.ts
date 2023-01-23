@@ -39,3 +39,15 @@ export async function get(req: Request, res: Response) {
     return res.status(400).json({ error: message });
   }
 }
+
+export async function attend(req: Request, res: Response) {
+  try {
+    const userId = req.app.locals.userId;
+    const id = req.params.id;
+    const boolean = await eventsService.attend(id, userId);
+    return res.status(200).json({ message: 'Attendee added' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return res.status(400).json({ error: message });
+  }
+}

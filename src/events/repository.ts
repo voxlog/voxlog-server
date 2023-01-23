@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { db } from '../lib/database/connector';
-import { AllEventsOut, EventCreate, EventOut } from './dtos';
+import { AllEventsOut, EventCreate, EventFullOut, EventOut } from './dtos';
 
 export async function create(event: EventCreate): Promise<EventOut | null> {
   try {
@@ -92,18 +92,33 @@ export async function getAll(): Promise<AllEventsOut[]> {
   }
 }
 
-export async function get(id: string): Promise<AllEventsOut | null> {
+export async function get(id: string): Promise<EventFullOut | null> {
   try {
     const event = await db.event.findUnique({
       where: {
         eventId: id,
       },
       include: {
-        artists: true,
+        artists: {
+          include: {
+            artist: {
+              select: {
+                artistId: true,
+                name: true,
+                picUrl: true,
+              },
+            },
+          },
+        },
         creator: true,
         _count: {
           select: {
             attendees: true,
+          },
+        },
+        pictures: {
+          include: {
+            uploader: true,
           },
         },
       },
@@ -111,19 +126,81 @@ export async function get(id: string): Promise<AllEventsOut | null> {
 
     if (!event) return null;
 
-    const eventOut: AllEventsOut = {
-      id: event.eventId,
+    const eventOut: EventFullOut = {
+      eventId: event.eventId,
       name: event.name,
-      artists: event.artists.map((artist) => artist.artistId),
-      startDate: DateTime.fromJSDate(event.startTime).toISODate(),
+      description: event.description,
+      url: event.url,
+      imageUrl: event.imageUrl,
       lat: event.lat,
       lon: event.lon,
-      peopleCount: event._count.attendees,
-      imageUrl: event.imageUrl,
       local: null,
+      startTime: DateTime.fromJSDate(event.startTime).toISODate(),
+      endTime: DateTime.fromJSDate(event.endTime).toISODate(),
+      creator: {
+        username: event.creator.username,
+        name: event.creator.realName || event.creator.username,
+      },
+      artists: event.artists.map((artist) => ({
+        artistId: artist.artistId,
+        name: artist.artist.name,
+        picUrl: artist.artist.picUrl,
+      })),
+      pictures: event.pictures.map((picture) => ({
+        pictureId: picture.pictureId,
+        url: picture.url,
+        uploader: {
+          userId: picture.uploaderId,
+          name: picture.uploader.realName || picture.uploader.username,
+        },
+      })),
+      peopleCount: event._count.attendees,
     };
 
     return eventOut;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function attend(eventId: string, userId: string): Promise<boolean> {
+  try {
+    const event = await db.event.findUnique({
+      where: {
+        eventId,
+      },
+    });
+
+    if (!event) return false;
+
+    // Check if user is already attending
+    const userAttend = await db.eventAttendee.findUnique({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId,
+        },
+      },
+    });
+
+    if (userAttend) return false;
+
+    await db.eventAttendee.create({
+      data: {
+        user: {
+          connect: {
+            userId,
+          },
+        },
+        event: {
+          connect: {
+            eventId,
+          },
+        },
+      },
+    });
+
+    return true;
   } catch (error) {
     throw error;
   }
