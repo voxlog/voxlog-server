@@ -74,3 +74,40 @@ export async function getAll(): Promise<AllEventsOut[]> {
     throw error;
   }
 }
+
+export async function get(id: string): Promise<AllEventsOut | null> {
+  try {
+    const event = await db.event.findUnique({
+      where: {
+        eventId: id,
+      },
+      include: {
+        artists: true,
+        creator: true,
+        _count: {
+          select: {
+            attendees: true,
+          },
+        },
+      },
+    });
+
+    if (!event) return null;
+
+    const eventOut: AllEventsOut = {
+      id: event.eventId,
+      name: event.name,
+      artists: event.artists.map((artist) => artist.artistId),
+      startDate: DateTime.fromJSDate(event.startTime).toISODate(),
+      lat: event.lat,
+      lon: event.lon,
+      peopleCount: event._count.attendees,
+      imageUrl: event.imageUrl,
+      local: null,
+    };
+
+    return eventOut;
+  } catch (error) {
+    throw error;
+  }
+}

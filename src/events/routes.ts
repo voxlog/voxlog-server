@@ -5,6 +5,6 @@ const routes = Router();
 
 routes.post('/', auth, Events.create);
 routes.get('/', Events.getAll);
-// routes.get('/:id', auth, Events.get);
+routes.get('/:id', Events.get);
 
 export default routes;

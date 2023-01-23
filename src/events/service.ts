@@ -20,3 +20,13 @@ export async function getAll(): Promise<AllEventsOut[]> {
     throw error;
   }
 }
+
+export async function get(id: string): Promise<EventOut | null> {
+  try {
+    const event = await eventsRepository.get(id);
+    return event;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
