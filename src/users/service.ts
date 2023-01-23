@@ -111,3 +111,13 @@ export async function getTopArtists(username: string, quantity: number): Promise
     throw error;
   }
 }
+
+export async function getTopAlbums(username: string, quantity: number): Promise<any> {
+  try {
+    const topAlbums = await userRepository.getTopAlbums(username, quantity);
+    return topAlbums;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

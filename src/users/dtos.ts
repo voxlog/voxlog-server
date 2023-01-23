@@ -68,9 +68,8 @@ export type TopArtist = {
 
 export type TopAlbum = {
   albumId: string;
-  title: string;
-  coverArtUrl: string | null;
-  hoursListened: number;
+  albumTitle: string;
+  albumArtUrl: string | null;
 }
 
 export type UserCreateIn = z.infer<typeof UserCreateInSchema>;

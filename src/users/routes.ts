@@ -20,6 +20,6 @@ userRoutes.get('/', User.get);
 userRoutes.get('/stats', User.getStats);
 userRoutes.get('/recent-scrobbles', User.getRecentScrobbles);
 userRoutes.get('/top-artists', User.getTopArtists);
-// userRoutes.get('/top-albums', User.getTopAlbums);
+userRoutes.get('/top-albums', User.getTopAlbums);
 
 export default routes;
