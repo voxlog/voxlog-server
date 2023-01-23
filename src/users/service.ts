@@ -101,3 +101,13 @@ export async function getApiToken(username: string): Promise<string> {
     throw error;
   }
 }
+
+export async function getTopArtists(username: string, quantity: number): Promise<any> {
+  try {
+    const topArtists = await userRepository.getTopArtists(username, quantity);
+    return topArtists;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

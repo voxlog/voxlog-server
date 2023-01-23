@@ -60,6 +60,20 @@ export type UserListeningStatsOut = {
   totalTracks: number;
 };
 
+export type TopArtist = {
+  artistId: string;
+  name: string;
+  picUrl: string | null;
+  hoursListened: number;
+}
+
+export type TopAlbum = {
+  albumId: string;
+  title: string;
+  coverArtUrl: string | null;
+  hoursListened: number;
+}
+
 export type UserCreateIn = z.infer<typeof UserCreateInSchema>;
 export type UserLoginIn = z.infer<typeof UserLoginInSchema>;
 export type UserOut = z.infer<typeof UserOutSchema>;

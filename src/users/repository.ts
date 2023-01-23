@@ -3,6 +3,7 @@ import { db, sql } from '../lib/database/connector';
 import { RecentScrobble, UserCreateIn, UserListeningStatsOut, UserOut } from './dtos';
 import cuid from 'cuid';
 import { User } from '@prisma/client';
+import { TopArtist, TopAlbum } from './dtos';
 
 export async function getPassword(username: string): Promise<string | null> {
   try {
@@ -207,6 +208,25 @@ export async function getRecentScrobbles(username: string, quantity: number): Pr
       };
     });
     return tracks;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getTopArtists(username: string, quantity: number): Promise<TopArtist[]> {
+  try {
+    const topArtists: any = await db.$queryRaw(sql`
+    Select "getTopArtists"(${username}, ${quantity});
+    `);
+
+    const artists: TopArtist[] = topArtists[0].getTopArtists.map((artist: any) => {
+      return {
+        artistId: artist.artistId,
+        name: artist.name,
+        playCount: artist.playCount,
+      };
+    });
+    return artists;
   } catch (error) {
     throw error;
   }
