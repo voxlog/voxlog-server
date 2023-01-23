@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as eventsService from './service';
-import { EventCreateSchema } from './dtos';
+import { AllEventsOut, EventCreateSchema } from './dtos';
 
 export async function create(req: Request, res: Response) {
   try {
@@ -11,8 +11,19 @@ export async function create(req: Request, res: Response) {
     const createdEvent = await eventsService.create(event);
     if (createdEvent) return res.status(201).json(createdEvent);
     else return res.status(400).json({ error: 'Event already exists' });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return res.status(400).json({ error: message });
+  }
+}
+
+export async function getAll(req: Request, res: Response) {
+  try {
+    const events: AllEventsOut[] = await eventsService.getAll();
+    console.log('events', events);
+    return res.status(200).json(events);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return res.status(400).json({ error: message });
   }
 }

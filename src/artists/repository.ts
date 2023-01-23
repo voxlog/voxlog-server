@@ -81,9 +81,8 @@ export async function updateMbId(artistId: string, newArtistName: string, mbId: 
 
 // TODO: we're still not considering the case where there could be an artist with
 // a MusicBrainz ID but no Spotify ID.
-export async function create(artist: ArtistCreateIn): Promise<ArtistOut| null> {
+export async function create(artist: ArtistCreateIn): Promise<ArtistOut | null> {
   try {
-
     const createdArtist = await db.artist.create({
       data: ArtistCreateInSchema.parse(artist),
     });
@@ -102,7 +101,25 @@ export async function create(artist: ArtistCreateIn): Promise<ArtistOut| null> {
 }
 
 export async function searchByName(artistName: string): Promise<ArtistOut[]> {
-  return [];
+  const artists = await db.artist.findMany({
+    where: {
+      name: {
+        contains: artistName,
+        mode: 'insensitive',
+      },
+    },
+    take: 5,
+  });
+
+  const parsedArtists: ArtistOut[] = artists.map((artist) => {
+    return {
+      artistId: artist.artistId,
+      name: artist.name,
+      picUrl: artist.picUrl,
+    };
+  });
+
+  return parsedArtists;
 }
 
 export async function getPopular(quantity: number): Promise<ArtistOut[]> {
@@ -113,7 +130,7 @@ export async function getPopular(quantity: number): Promise<ArtistOut[]> {
   }
 }
 
-export async function getListeningStats(artistId: string): Promise<ArtistListeningStats| null> {
+export async function getListeningStats(artistId: string): Promise<ArtistListeningStats | null> {
   try {
     const result = await db.artist.findUnique({
       where: {
@@ -127,8 +144,8 @@ export async function getListeningStats(artistId: string): Promise<ArtistListeni
                 scrobbles: {
                   include: {
                     user: true,
-                  }
-                }
+                  },
+                },
               },
             },
           },
@@ -136,88 +153,88 @@ export async function getListeningStats(artistId: string): Promise<ArtistListeni
       },
     });
 
-  if(!result) return null;
+    if (!result) return null;
 
-  let foundListeners: string[] = [];
-  let uniqueListeners: number = 0;
-  let totalHoursListened: number = 0;
-  let totalScrobbles: number = 0;
-  let topTracks: {
-    trackId: string;
-    trackTitle: string;
-    totalHoursListened: number;
-    albumCoverArtUrl: string | null;
-  }[] = [];
-  let topAlbums: {
-    albumId: string;
-    albumTitle: string;
-    totalHoursListened: number;
-    albumCoverArtUrl: string | null;
-  }[] = [];
-  
-  // From data, get unique listeners
-  result.albums.forEach(album => {
-    if(!topAlbums.some(a => a.albumId === album.albumId)) {
-      topAlbums.push({
-        albumId: album.albumId,
-        albumTitle: album.title,
-        totalHoursListened: 0,
-        albumCoverArtUrl: album.coverArtUrl,
-      });
-    }
-    album.tracks.forEach(track => {
-      if(!topTracks.some(t => t.trackId === track.trackId)) {
-        topTracks.push({
-          trackId: track.trackId,
-          trackTitle: track.title,
+    let foundListeners: string[] = [];
+    let uniqueListeners: number = 0;
+    let totalHoursListened: number = 0;
+    let totalScrobbles: number = 0;
+    let topTracks: {
+      trackId: string;
+      trackTitle: string;
+      totalHoursListened: number;
+      albumCoverArtUrl: string | null;
+    }[] = [];
+    let topAlbums: {
+      albumId: string;
+      albumTitle: string;
+      totalHoursListened: number;
+      albumCoverArtUrl: string | null;
+    }[] = [];
+
+    // From data, get unique listeners
+    result.albums.forEach((album) => {
+      if (!topAlbums.some((a) => a.albumId === album.albumId)) {
+        topAlbums.push({
+          albumId: album.albumId,
+          albumTitle: album.title,
           totalHoursListened: 0,
           albumCoverArtUrl: album.coverArtUrl,
         });
       }
-
-      track.scrobbles.forEach(scrobble => {
-        totalScrobbles++;
-        if(!foundListeners.includes(scrobble.user.userId)) {
-          foundListeners.push(scrobble.user.userId);
-          uniqueListeners++;
+      album.tracks.forEach((track) => {
+        if (!topTracks.some((t) => t.trackId === track.trackId)) {
+          topTracks.push({
+            trackId: track.trackId,
+            trackTitle: track.title,
+            totalHoursListened: 0,
+            albumCoverArtUrl: album.coverArtUrl,
+          });
         }
-        totalHoursListened += track.duration;
-        
-        // Update top tracks
-        topTracks.forEach(topTrack => {
-          if(topTrack.trackId === track.trackId) {
-            topTrack.totalHoursListened += track.duration;
+
+        track.scrobbles.forEach((scrobble) => {
+          totalScrobbles++;
+          if (!foundListeners.includes(scrobble.user.userId)) {
+            foundListeners.push(scrobble.user.userId);
+            uniqueListeners++;
           }
-        })
+          totalHoursListened += track.duration;
 
-        // Update top albums
-        topAlbums.forEach(topAlbum => {
-          if(topAlbum.albumId === album.albumId) {
-            topAlbum.totalHoursListened += track.duration;
-          }
-        })
-      })
-    })
-  })
+          // Update top tracks
+          topTracks.forEach((topTrack) => {
+            if (topTrack.trackId === track.trackId) {
+              topTrack.totalHoursListened += track.duration;
+            }
+          });
 
-  // Sort top tracks and albums
-  topTracks.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
-  topAlbums.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
-  // Limit to 10
-  topTracks = topTracks.slice(0, 10);
-  // Limit to 5
-  topAlbums = topAlbums.slice(0, 5);
-  // Divide by 3600 to get hours
-  topTracks.forEach(track => track.totalHoursListened /= 3600);
-  topAlbums.forEach(album => album.totalHoursListened /= 3600);
+          // Update top albums
+          topAlbums.forEach((topAlbum) => {
+            if (topAlbum.albumId === album.albumId) {
+              topAlbum.totalHoursListened += track.duration;
+            }
+          });
+        });
+      });
+    });
 
-  return {
-    uniqueListeners: uniqueListeners,
-    totalHoursListened: totalHoursListened / 3600,
-    totalScrobbles: totalScrobbles,
-    topTracks: topTracks,
-    topAlbums: topAlbums,
-  };
+    // Sort top tracks and albums
+    topTracks.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
+    topAlbums.sort((a, b) => b.totalHoursListened - a.totalHoursListened);
+    // Limit to 10
+    topTracks = topTracks.slice(0, 10);
+    // Limit to 5
+    topAlbums = topAlbums.slice(0, 5);
+    // Divide by 3600 to get hours
+    topTracks.forEach((track) => (track.totalHoursListened /= 3600));
+    topAlbums.forEach((album) => (album.totalHoursListened /= 3600));
+
+    return {
+      uniqueListeners: uniqueListeners,
+      totalHoursListened: totalHoursListened / 3600,
+      totalScrobbles: totalScrobbles,
+      topTracks: topTracks,
+      topAlbums: topAlbums,
+    };
   } catch (error) {
     throw error;
   }

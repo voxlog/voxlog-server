@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import * as artistService from './service';
+import { ArtistOut } from './dtos';
 
 export async function getById(req: Request, res: Response) {
   try {
@@ -21,15 +22,12 @@ export async function getById(req: Request, res: Response) {
 
 export async function searchByName(req: Request, res: Response) {
   try {
-    const artistName = z.string().parse(req.params.artistName);
+    const artistName = z.string().parse(req.query.name);
+    console.log('name:', artistName);
 
-    const artist = await artistService.searchByName(artistName);
+    const artists: ArtistOut[] = await artistService.searchByName(artistName);
 
-    if (artist) {
-      return res.status(200).json({ artist: artist });
-    } else {
-      return res.status(404).json({ error: 'Artist not found' });
-    }
+    return res.status(200).json({ artists: artists });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Internal server error' });
