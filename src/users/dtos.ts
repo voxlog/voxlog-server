@@ -62,9 +62,8 @@ export type UserListeningStatsOut = {
 
 export type TopArtist = {
   artistId: string;
-  name: string;
-  picUrl: string | null;
-  hoursListened: number;
+  artistName: string;
+  artistArtUrl: string | null;
 }
 
 export type TopAlbum = {

@@ -213,20 +213,69 @@ export async function getRecentScrobbles(username: string, quantity: number): Pr
   }
 }
 
-export async function getTopArtists(username: string, quantity: number): Promise<TopArtist[]> {
+export async function getTopArtists(userId: string, quantity: number): Promise<TopArtist[]> {
   try {
-    const topArtists: any = await db.$queryRaw(sql`
-    Select "getTopArtists"(${username}, ${quantity});
-    `);
+    const result = await db.artist.findMany({
+      include: {
+        albums: {
+          include: {
+            tracks: {
+              include: {
+                scrobbles: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
-    const artists: TopArtist[] = topArtists[0].getTopArtists.map((artist: any) => {
+    // Filter user scrobbles
+    const filteredResult = result.filter((artist) => {
+      return artist.albums.some((album) => {
+        return album.tracks.some((track) => {
+          return track.scrobbles.some((scrobble) => {
+            return scrobble.user.userId === userId;
+          });
+        });
+      });
+    });
+
+    // For each artist, sum the duration of all tracks
+    let artists = filteredResult.map((artist) => {
+      let totalDuration = 0;
+      artist.albums.forEach((album) => {
+        album.tracks.forEach((track) => {
+          totalDuration += track.duration;
+        });
+      });
       return {
         artistId: artist.artistId,
         name: artist.name,
-        playCount: artist.playCount,
+        picUrl: artist.picUrl,
+        totalDuration: totalDuration,
       };
     });
-    return artists;
+
+    // Sort by duration
+    artists = artists.sort((a, b) => {
+      return b.totalDuration - a.totalDuration;
+    });
+
+    // Remove totalDuration
+    const retArtists = artists.map((artist) => {
+      return {
+        artistId: artist.artistId,
+        artistName: artist.name,
+        artistArtUrl: artist.picUrl,
+      };
+    });
+
+    // Return the top 5
+    return retArtists;
   } catch (error) {
     throw error;
   }
