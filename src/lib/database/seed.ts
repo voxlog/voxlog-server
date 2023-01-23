@@ -288,19 +288,21 @@ async function main() {
     END; $$ LANGUAGE plpgsql;
     `,
   );
-  
+
   // triggers
-  await db.$queryRawUnsafe(
-    `
-    CREATE OR REPLACE FUNCTION "logUser"() RETURNS TRIGGER AS $$ \
-    BEGIN \
-      IF NEW <> OLD THEN \
-        new."updatedAt" = current_timestamp; \
-      END IF; \
-      RETURN NEW; \
-    END; $$ LANGUAGE PLPGSQL;
-  `,
-  );
+  // console.log('before log user')
+  // await db.$queryRawUnsafe(
+  //   `
+  //   CREATE OR REPLACE FUNCTION "logUser"() RETURNS TRIGGER AS $$ \
+  //   BEGIN \
+  //     IF NEW <> OLD THEN \
+  //       new."updatedAt" = current_timestamp; \
+  //     END IF; \
+  //     RETURN NEW; \
+  //   END; $$ LANGUAGE PLPGSQL;
+  // `,
+  // );
+  console.log('before log user changes');
 
   await db.$queryRawUnsafe(`
       CREATE or replace TRIGGER "logUserChanges" \
@@ -308,9 +310,8 @@ async function main() {
       ON "User" \
       FOR EACH ROW \
       EXECUTE PROCEDURE "logUser"();   
-    `,
-  );
-  
+    `);
+  console.log('before log event');
   await db.$queryRawUnsafe(
     `
     CREATE OR REPLACE FUNCTION "logEvent"() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$ \
@@ -322,15 +323,15 @@ async function main() {
     END; $$ 
     `,
   );
-    
+  console.log('before log events changes');
   await db.$queryRawUnsafe(`
     CREATE or replace TRIGGER "logEventChanges" \
     before UPDATE \
     ON "Event" \
     FOR EACH ROW \
     EXECUTE PROCEDURE "logEvent"();
-    `,
-  );
+    `);
+  console.log('before log event attendee');
 
   await db.$queryRawUnsafe(`
       CREATE OR REPLACE FUNCTION "logEventAttendee"() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$ \
@@ -340,8 +341,7 @@ async function main() {
         END IF; \
         RETURN NEW; \
       END; $$ 
-    `,
-  );
+    `);
 
   await db.$queryRawUnsafe(`
       CREATE or replace TRIGGER "logEventAttendeeChanges" \
@@ -349,9 +349,8 @@ async function main() {
       ON "EventAttendee" \
       FOR EACH ROW \
       EXECUTE PROCEDURE "logEventAttendee"();
-    `,
-  );
-
+    `);
+  console.log('before log event artist');
   await db.$queryRawUnsafe(`
     CREATE OR REPLACE FUNCTION "logEventArtist"() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$ \
     BEGIN \
@@ -360,17 +359,15 @@ async function main() {
       END IF; \
       RETURN NEW; \
     END; $$
-    `,
-  );
-
+    `);
+  console.log('before log event artist changes');
   await db.$queryRawUnsafe(`
     CREATE or replace TRIGGER "logEventArtistChanges" \
       before UPDATE \
       ON "EventArtist" \
       FOR EACH ROW \
       EXECUTE PROCEDURE "logEventArtist"(); \
-    `,
-  );
+    `);
 }
 
 main()

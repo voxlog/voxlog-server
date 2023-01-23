@@ -131,15 +131,12 @@ export async function getApiToken(req: Request, res: Response) {
 export async function getTopArtists(req: Request, res: Response) {
   try {
     const username: string = z.string().parse(req.params.username);
-    const quantity = z.number().optional().parse(req.query.range) || 5;
+    const quantity = 4;
+    console.log('username', username);
 
     const topArtists = await userService.getTopArtists(username, quantity);
-
-    if (topArtists) {
-      return res.status(200).json(topArtists);
-    } else {
-      return res.status(404).json({ error: 'User already exists' });
-    }
+    console.log('aaaa', topArtists);
+    return res.status(200).json(topArtists);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Internal server error' });

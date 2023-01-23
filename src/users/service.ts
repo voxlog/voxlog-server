@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import * as userRepository from './repository';
-import { UserCreateIn, UserLoginIn, UserOut } from './dtos';
+import { TopArtist, UserCreateIn, UserLoginIn, UserOut } from './dtos';
 import { compareHash, generateToken, generateApiKey, hashPassword } from './auth';
 
 export async function validateLogin(user: UserLoginIn): Promise<string | null> {
@@ -102,7 +102,7 @@ export async function getApiToken(username: string): Promise<string> {
   }
 }
 
-export async function getTopArtists(username: string, quantity: number): Promise<any> {
+export async function getTopArtists(username: string, quantity: number): Promise<TopArtist[]> {
   try {
     const topArtists = await userRepository.getTopArtists(username, quantity);
     return topArtists;

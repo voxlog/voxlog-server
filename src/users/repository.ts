@@ -238,7 +238,7 @@ export async function getTopArtists(userId: string, quantity: number): Promise<T
       return artist.albums.some((album) => {
         return album.tracks.some((track) => {
           return track.scrobbles.some((scrobble) => {
-            return scrobble.user.userId === userId;
+            return scrobble.user.username === userId;
           });
         });
       });
@@ -275,7 +275,7 @@ export async function getTopArtists(userId: string, quantity: number): Promise<T
     });
 
     // Return the top 5
-    return retArtists;
+    return retArtists.slice(0, 5);
   } catch (error) {
     throw error;
   }
