@@ -11,8 +11,8 @@ export const EventCreateSchema = z.object({
 
   artistsIds: z.array(z.string().max(128)),
 
-  startTime: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
-  endTime: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/),
+  startTime: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endTime: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   creatorId: z.string().max(128),
 });
 
@@ -21,4 +21,16 @@ export type EventCreate = z.infer<typeof EventCreateSchema>;
 export type EventOut = {
   eventId: string;
   name: string;
+};
+
+export type AllEventsOut = {
+  id: string;
+  name: string;
+  artists: string[];
+  startDate: string;
+  local: string | null;
+  lat: number;
+  lon: number;
+  peopleCount: number;
+  imageUrl: string | null;
 };

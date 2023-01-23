@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { db } from '../lib/database/connector';
-import { EventCreate, EventOut } from './dtos';
+import { AllEventsOut, EventCreate, EventOut } from './dtos';
 
 export async function create(event: EventCreate): Promise<EventOut | null> {
   try {
@@ -38,6 +38,38 @@ export async function create(event: EventCreate): Promise<EventOut | null> {
     });
 
     return eventCreated;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getAll(): Promise<AllEventsOut[]> {
+  try {
+    const events = await db.event.findMany({
+      include: {
+        artists: true,
+        creator: true,
+        _count: {
+          select: {
+            attendees: true,
+          },
+        },
+      },
+    });
+
+    const eventsOut: AllEventsOut[] = events.map((event) => ({
+      id: event.eventId,
+      name: event.name,
+      artists: event.artists.map((artist) => artist.artistId),
+      startDate: DateTime.fromJSDate(event.startTime).toISODate(),
+      lat: event.lat,
+      lon: event.lon,
+      peopleCount: event._count.attendees,
+      imageUrl: event.imageUrl,
+      local: null,
+    }));
+
+    return eventsOut;
   } catch (error) {
     throw error;
   }

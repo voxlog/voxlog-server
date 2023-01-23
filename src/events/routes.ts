@@ -4,7 +4,7 @@ import * as Events from './handler';
 const routes = Router();
 
 routes.post('/', auth, Events.create);
-// routes.get('/', auth, Events.getAll);
+routes.get('/', Events.getAll);
 // routes.get('/:id', auth, Events.get);
 
 export default routes;
