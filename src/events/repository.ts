@@ -57,10 +57,27 @@ export async function getAll(): Promise<AllEventsOut[]> {
       },
     });
 
+    const artistNamesGet = await db.artist.findMany({
+      select: {
+        name: true,
+      },
+      where: {
+        artistId: {
+          in: events.flatMap((event) => event.artists.map((artist) => artist.artistId)),
+        },
+      },
+    });
+
+    let artistNames: string[] = [];
+
+    artistNamesGet.forEach((artist) => {
+      artistNames.push(artist.name);
+    });
+
     const eventsOut: AllEventsOut[] = events.map((event) => ({
       id: event.eventId,
       name: event.name,
-      artists: event.artists.map((artist) => artist.artistId),
+      artists: artistNames,
       startDate: DateTime.fromJSDate(event.startTime).toISODate(),
       lat: event.lat,
       lon: event.lon,
