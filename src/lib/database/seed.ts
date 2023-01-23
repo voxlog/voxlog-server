@@ -99,30 +99,30 @@ async function main() {
     `,
   );
 
-  // await db.$queryRawUnsafe(
-  //   `CREATE OR REPLACE FUNCTION "getByUsername"(usernameIn VARCHAR(16)) RETURNS table ( \
-  //     "userId" text, \
-  //     "username" Varchar(16), \
-  //     "email" VARCHAR(100), \
-  //     "birthDate" Date, \
-  //     "bio" VarChar(140), \
-  //     "realName" VarChar(128), \
-  //     "profilePictureUrl" VarChar(2048), \
-  //     "artistsRange" "RangePreference", \
-  //     "albumsRange" "RangePreference", \
-  //     "tracksRange" "RangePreference", \
-  //     "createdAt" Timestamp(0), \
-  // 	  "updatedAt" Timestamp(0) \
-  //   ) AS $$ \
-  //   BEGIN \
-  //     RETURN Query SELECT \
-  //         "User"."userId", "User".username, "User".email, "User"."birthDate", "User".bio, "User"."realName", \
-  //         "User"."profilePictureUrl", "User"."artistsRange", "User"."albumsRange", "User"."tracksRange", \
-  //         "User"."createdAt", "User"."updatedAt" \
-  //         FROM "User" WHERE "User".username = usernameIn LIMIT 1; \
-  //   end; $$ LANGUAGE plpgsql;
-  //   `,
-  // );
+  await db.$queryRawUnsafe(
+    `CREATE OR REPLACE FUNCTION "getByUsername"(usernameIn VARCHAR(16)) RETURNS table ( \
+      "userId" text, \
+      "username" Varchar(16), \
+      "email" VARCHAR(100), \
+      "birthDate" Date, \
+      "bio" VarChar(140), \
+      "realName" VarChar(128), \
+      "profilePictureUrl" VarChar(2048), \
+      "artistsRange" "RangePreference", \
+      "albumsRange" "RangePreference", \
+      "tracksRange" "RangePreference", \
+      "createdAt" Timestamp(0), \
+  	  "updatedAt" Timestamp(0) \
+    ) AS $$ \
+    BEGIN \
+      RETURN Query SELECT \
+          "User"."userId", "User".username, "User".email, "User"."birthDate", "User".bio, "User"."realName", \
+          "User"."profilePictureUrl", "User"."artistsRange", "User"."albumsRange", "User"."tracksRange", \
+          "User"."createdAt", "User"."updatedAt" \
+          FROM "User" WHERE "User".username = usernameIn LIMIT 1; \
+    end; $$ LANGUAGE plpgsql;
+    `,
+  );
 
   await db.$queryRawUnsafe(
     `CREATE OR REPLACE FUNCTION "searchUserByName"(usernameIn VARCHAR(16)) RETURNS table ( \

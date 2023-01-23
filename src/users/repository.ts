@@ -284,3 +284,64 @@ export async function getTopArtists(userId: string, quantity: number): Promise<T
 export async function searchByName(username: string): Promise<UserOut[]> {
   return [];
 }
+
+export async function getTopAlbums(userId: string, quantity: number): Promise<TopAlbum[]> {
+  try {
+    const result = await db.album.findMany({
+      include: {
+        tracks: {
+          include: {
+            scrobbles: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Filter user scrobbles
+    const filteredResult = result.filter((album) => {
+      return album.tracks.some((track) => {
+        return track.scrobbles.some((scrobble) => {
+          return scrobble.user.username === userId;
+        });
+      });
+    });
+
+    // For each album, sum the duration of all tracks
+    let albums = filteredResult.map((album) => {
+      let totalDuration = 0;
+      album.tracks.forEach((track) => {
+        totalDuration += track.duration;
+      });
+      return {
+        albumId: album.albumId,
+        title: album.title,
+        coverArtUrl: album.coverArtUrl,
+        totalDuration: totalDuration,
+      };
+    });
+
+    // Sort by duration
+    albums = albums.sort((a, b) => {
+      return b.totalDuration - a.totalDuration;
+    });
+
+    //
+
+    // Remove totalDuration
+    const retAlbums = albums.map((album) => {
+      return {
+        albumId: album.albumId,
+        albumTitle: album.title,
+        albumArtUrl: album.coverArtUrl,
+      };
+    });
+
+    return retAlbums.slice(0, 5);
+  } catch (error) {
+    throw error;
+  }
+}

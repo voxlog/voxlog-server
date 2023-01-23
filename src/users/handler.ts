@@ -142,3 +142,17 @@ export async function getTopArtists(req: Request, res: Response) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+export async function getTopAlbums(req: Request, res: Response) {
+  try {
+    const username: string = z.string().parse(req.params.username);
+    const quantity = 4;
+
+    const topAlbums = await userService.getTopAlbums(username, quantity);
+
+    return res.status(200).json(topAlbums);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

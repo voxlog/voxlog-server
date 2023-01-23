@@ -64,14 +64,14 @@ export type TopArtist = {
   artistId: string;
   artistName: string;
   artistArtUrl: string | null;
-}
+};
 
 export type TopAlbum = {
   albumId: string;
-  title: string;
-  coverArtUrl: string | null;
-  hoursListened: number;
-}
+  albumTitle: string;
+  albumArtUrl: string | null;
+  // hoursListened: number;
+};
 
 export type UserCreateIn = z.infer<typeof UserCreateInSchema>;
 export type UserLoginIn = z.infer<typeof UserLoginInSchema>;
