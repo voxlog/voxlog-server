@@ -156,3 +156,21 @@ export async function getTopAlbums(req: Request, res: Response) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+export async function getTopAlbums(req: Request, res: Response) {
+  try {
+    const username: string = z.string().parse(req.params.username);
+    const quantity = z.number().optional().parse(req.query.range) || 5;
+
+    const topAlbums = await userService.getTopAlbums(username, quantity);
+
+    if (topAlbums) {
+      return res.status(200).json(topAlbums);
+    } else {
+      return res.status(404).json({ error: 'User already exists' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

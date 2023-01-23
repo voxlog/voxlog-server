@@ -281,10 +281,6 @@ export async function getTopArtists(userId: string, quantity: number): Promise<T
   }
 }
 
-export async function searchByName(username: string): Promise<UserOut[]> {
-  return [];
-}
-
 export async function getTopAlbums(userId: string, quantity: number): Promise<TopAlbum[]> {
   try {
     const result = await db.album.findMany({
@@ -344,4 +340,8 @@ export async function getTopAlbums(userId: string, quantity: number): Promise<To
   } catch (error) {
     throw error;
   }
+}
+
+export async function searchByName(username: string): Promise<UserOut[]> {
+  return [];
 }
