@@ -5,6 +5,7 @@ import userRoutes from './users/routes';
 import trackRoutes from './tracks/routes';
 import albumRoutes from './albums/routes';
 import artistRoutes from './artists/routes';
+import eventsRoutes from './events/routes';
 import cors from 'cors';
 
 const app = express();
@@ -20,5 +21,16 @@ app.use('/users', userRoutes);
 app.use('/tracks', trackRoutes);
 app.use('/albums', albumRoutes);
 app.use('/artists', artistRoutes);
+app.use('/events', eventsRoutes);
+
+// serve static images
+app.use('/images', express.static('images'));
+// route to upload images
+// app.post('/images', (req, res) => {
+//   // store image in images folder
+
+//   // return image url
+//   res.send('image url');
+// });
 
 app.listen(8000);
